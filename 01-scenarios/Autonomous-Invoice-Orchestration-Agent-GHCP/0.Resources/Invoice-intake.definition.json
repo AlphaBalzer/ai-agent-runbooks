@@ -1,0 +1,364 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "Operator-only intake",
+  "source": "Observed native designer definition; tenant values replaced and authoring metadata removed.",
+  "status": "Bounded components demonstrated; agent-to-package execution remains blocked by inconsistent Preview configuration.",
+  "deployment": "Recreate in the supported designer, bind approved end-user connections, map the publisher/table fields, and replace placeholders. These are not solution imports or a supported unattended deployment API.",
+  "placeholders": "NORMAL_SOURCE_RECORD_ID is an operator-selected intake row. DENIED_ROW_ID is the all-zero GUID, which must not refer to a real row. Seed message IDs come from received-item selection. Keep fixed resources and allow-lists; never replace them with unconstrained model inputs.",
+  "limitations": "Current reader/generator allow one source record. Integer-cent finance checks cover the documented synthetic English AUD format. Unsupported generator branch and partial/concurrent-write coverage remain incomplete; do not use for production or approve payments.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "messageId",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Approved received invoice ID. Claims one test record and saves its attachment to the fixed Invoice SharePoint folder. Never starts approval or payment."
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Initialize_intake_result": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "intake_result",
+              "type": "Object",
+              "value": "@json('{\"record_id\":\"\",\"source_file_url\":\"\",\"source_file_id\":\"\",\"created\":false,\"status\":\"capability_disabled\",\"record_state\":\"not_started\",\"reconciliation\":\"not_run\",\"error_code\":\"scope_or_input_not_allowed\"}')"
+            }
+          ]
+        }
+      },
+      "Get_email": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "parameters": {
+            "includeAttachments": true,
+            "messageId": "@triggerBody()?['text']",
+            "mailboxAddress": "__TEST_SHARED_MAILBOX__",
+            "fetchSensitivityLabelMetadata": true,
+            "extractSensitivityLabel": true
+          },
+          "host": {
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+            "connectionName": "shared_office365",
+            "operationId": "GetEmailV2"
+          }
+        },
+        "runAfter": {
+          "Initialize_intake_result": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Select": {
+        "type": "Select",
+        "inputs": {
+          "from": "@if(equals(outputs('Get_email')?['body/hasAttachments'], true), outputs('Get_email')?['body/attachments'], json('[]'))",
+          "select": {
+            "source_id": "@item()?['id']",
+            "name": "@item()?['name']",
+            "status": "@if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), 'ok', 'unsupported_input')",
+            "text": "@if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), base64ToString(item()?['contentBytes']), '')"
+          }
+        },
+        "runAfter": {
+          "Get_email": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Allowed_invoice_intake": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "equals": [
+                "@if(equals(length(coalesce(outputs('Get_email')?['body/attachments'],json('[]'))),1),if(and(contains(json('[\"__SEED_NORMAL_MESSAGE_ID__\",\"__SEED_MISSING_MESSAGE_ID__\",\"__SEED_NOPO_MESSAGE_ID__\",\"__SEED_CONFLICT_MESSAGE_ID__\",\"__SEED_MALICIOUS_MESSAGE_ID__\",\"__SEED_DUPLICATE_MESSAGE_ID__\",\"__SEED_UNSUPPORTED_MESSAGE_ID__\"]'),triggerBody()?['text']),not(empty(triggerBody()?['text'])),lessOrEquals(length(triggerBody()?['text']),287),equals(outputs('Get_email')?['body/id'],triggerBody()?['text']),lessOrEquals(coalesce(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['size'],65537),65536),not(equals(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['isInline'],true)),not(empty(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['contentBytes']))),'enabled','disabled'),'disabled')",
+                "enabled"
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Claim_intake": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "parameters": {
+                "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                "entityName": "cr090_ghcpinvoicereviews",
+                "item/cr090_intakekey": "@concat('ghcp-invoice|',triggerBody()?['text'])",
+                "item/cr090_reviewstate": "intake_claimed"
+              },
+              "host": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                "connectionName": "shared_commondataserviceforapps-1",
+                "operationId": "CreateRecordWithOrganization"
+              }
+            }
+          },
+          "Save_source": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "parameters": {
+                "dataset": "__INVOICE_SITE_URL__",
+                "folderPath": "/Shared Documents/Incoming",
+                "name": "@concat(outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid'],if(equals(first(body('Select'))?['status'],'ok'),'.txt','.bin'))",
+                "body": "@base64ToBinary(first(outputs('Get_email')?['body/attachments'])?['contentBytes'])"
+              },
+              "host": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                "connectionName": "shared_sharepointonline-1",
+                "operationId": "CreateFile"
+              }
+            },
+            "runAfter": {
+              "Claim_intake": [
+                "Succeeded"
+              ]
+            }
+          },
+          "Source_snapshot": {
+            "type": "Select",
+            "inputs": {
+              "from": "@json('[{}]')",
+              "select": {
+                "schema_version": "1",
+                "approval_state": "not_requested",
+                "record_version": "@int('1')",
+                "record_id": "@outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid']",
+                "source_id": "@outputs('Get_email')?['body/id']",
+                "subject": "@outputs('Get_email')?['body/subject']",
+                "body": "@outputs('Get_email')?['body/body']",
+                "sender": "@outputs('Get_email')?['body/from']",
+                "attachments": "@body('Select')",
+                "source_file_id": "@outputs('Save_source')?['body/Id']",
+                "source_file_path": "@outputs('Save_source')?['body/Path']"
+              }
+            },
+            "runAfter": {
+              "Save_source": [
+                "Succeeded"
+              ]
+            }
+          },
+          "Record_saved_source": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "parameters": {
+                "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                "entityName": "cr090_ghcpinvoicereviews",
+                "recordId": "@outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid']",
+                "item/cr090_reviewstate": "source_saved",
+                "item/cr090_sourcefileurl": "@concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_source')?['body/Path']),'%2F','/'))",
+                "item/cr090_reviewpayload": "@string(first(body('Source_snapshot')))"
+              },
+              "host": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                "connectionName": "shared_commondataserviceforapps-1",
+                "operationId": "UpdateOnlyRecordWithOrganization"
+              }
+            },
+            "runAfter": {
+              "Source_snapshot": [
+                "Succeeded"
+              ]
+            }
+          },
+          "Reconcile_intake": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "parameters": {
+                "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                "entityName": "cr090_ghcpinvoicereviews",
+                "$select": "cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_reviewstate,cr090_sourcefileurl,cr090_reviewpayload,versionnumber",
+                "$filter": "@concat('cr090_intakekey eq ''ghcp-invoice|',replace(triggerBody()?['text'],'''',''''''),'''')",
+                "$top": 2
+              },
+              "host": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                "connectionName": "shared_commondataserviceforapps-1",
+                "operationId": "ListRecordsWithOrganization"
+              }
+            },
+            "runAfter": {
+              "Record_saved_source": [
+                "Succeeded",
+                "Failed",
+                "TimedOut",
+                "Skipped"
+              ]
+            }
+          },
+          "Intake_outcome": {
+            "type": "Select",
+            "inputs": {
+              "from": "@json('[{}]')",
+              "select": {
+                "record_id": "@coalesce(outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid'],if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_ghcpinvoicereviewid'],''),'')",
+                "source_file_url": "@coalesce(if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_sourcefileurl'],null),if(equals(actions('Save_source')?['status'],'Succeeded'),concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_source')?['body/Path']),'%2F','/')),''),'')",
+                "source_file_id": "@coalesce(outputs('Save_source')?['body/Id'],'')",
+                "created": "@equals(actions('Claim_intake')?['status'],'Succeeded')",
+                "status": "@if(and(equals(actions('Reconcile_intake')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),equals(first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_reviewstate'],'source_saved'),false)),if(equals(actions('Record_saved_source')?['status'],'Succeeded'),if(equals(first(body('Select'))?['status'],'ok'),'ok','unsupported_input'),'duplicate'),if(or(equals(outputs('Claim_intake')?['statusCode'],401),equals(outputs('Claim_intake')?['statusCode'],403)),'denied',if(or(and(equals(actions('Save_source')?['status'],'Failed'),greaterOrEquals(coalesce(outputs('Save_source')?['statusCode'],0),400),less(coalesce(outputs('Save_source')?['statusCode'],0),500)),and(equals(actions('Record_saved_source')?['status'],'Failed'),greaterOrEquals(coalesce(outputs('Record_saved_source')?['statusCode'],0),400),less(coalesce(outputs('Record_saved_source')?['statusCode'],0),500))),'failed','unknown_outcome')))",
+                "error_code": "@concat('claim=',coalesce(actions('Claim_intake')?['status'],'not_run'),';file=',coalesce(actions('Save_source')?['status'],'not_run'),';record=',coalesce(actions('Record_saved_source')?['status'],'not_run'),';reconcile=',coalesce(actions('Reconcile_intake')?['status'],'not_run'))",
+                "record_state": "@coalesce(if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_reviewstate'],null),if(equals(actions('Claim_intake')?['status'],'Succeeded'),'intake_claimed','unknown'),'unknown')",
+                "reconciliation": "@if(equals(actions('Reconcile_intake')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),'confirmed','not_reconciled'),'unavailable')"
+              }
+            },
+            "runAfter": {
+              "Reconcile_intake": [
+                "Succeeded",
+                "Failed",
+                "TimedOut",
+                "Skipped"
+              ]
+            }
+          },
+          "Set_intake_result": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "intake_result",
+              "value": "@first(body('Intake_outcome'))"
+            },
+            "runAfter": {
+              "Intake_outcome": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "else": {
+          "actions": {}
+        },
+        "runAfter": {
+          "Select": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "record_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "source_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "source_file_url",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "source_file_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "boolean": {
+                "title": "created",
+                "type": "boolean",
+                "x-ms-content-hint": "BOOLEAN",
+                "x-ms-dynamically-added": true
+              },
+              "text_4": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_5": {
+                "title": "error_code",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_6": {
+                "title": "record_state",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_7": {
+                "title": "reconciliation",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3",
+              "boolean",
+              "text_4",
+              "text_5",
+              "text_6",
+              "text_7"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@variables('intake_result')?['record_id']",
+            "text_1": "@if(equals(actions('Get_email')?['status'],'Succeeded'),outputs('Get_email')?['body/id'],'')",
+            "text_2": "@variables('intake_result')?['source_file_url']",
+            "text_3": "@variables('intake_result')?['source_file_id']",
+            "boolean": "@variables('intake_result')?['created']",
+            "text_4": "@if(not(equals(actions('Get_email')?['status'],'Succeeded')),if(or(equals(outputs('Get_email')?['statusCode'],401),equals(outputs('Get_email')?['statusCode'],403)),'denied',if(or(equals(actions('Get_email')?['status'],'TimedOut'),equals(outputs('Get_email')?['statusCode'],429),greaterOrEquals(coalesce(outputs('Get_email')?['statusCode'],0),500)),'unavailable','failed')),if(not(equals(actions('Select')?['status'],'Succeeded')),'failed',if(and(equals(variables('intake_result')?['status'],'capability_disabled'),not(equals(actions('Allowed_invoice_intake')?['status'],'Succeeded'))),'unknown_outcome',variables('intake_result')?['status'])))",
+            "text_5": "@variables('intake_result')?['error_code']",
+            "text_6": "@variables('intake_result')?['record_state']",
+            "text_7": "@variables('intake_result')?['reconciliation']"
+          }
+        },
+        "runAfter": {
+          "Allowed_invoice_intake": [
+            "Succeeded",
+            "Failed",
+            "TimedOut",
+            "Skipped"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

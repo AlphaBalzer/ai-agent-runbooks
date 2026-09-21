@@ -1,0 +1,54 @@
+GHCP PREVIEW CONFIGURATION MISMATCH: REVIEWABLE REPRODUCTION
+21 September 2026 | Not submitted to any recipient
+
+EXPECTED
+An unpublished GHCP agent's next Preview turn uses saved instructions and attached
+workflows. Microsoft documents this behavior, including structural changes:
+https://learn.microsoft.com/en-us/microsoft-copilot-studio/agents-experience/authoring-test-bot
+
+OBSERVED
+Build and a fresh saved-definition read show the current instructions, two active
+skills and three active workflow tools. Some Preview turns successfully invoke
+the read/reference tools; other turns say those tools are unavailable and make
+no business-tool call.
+
+A clean unpublished draft reproduced the mismatch. Its first test used the raw
+name of the initially added read workflow, while reporting the subsequently
+saved reference and generation workflows unavailable. Editing Build, saving,
+then sending a follow-up in the same conversation did not resolve it.
+This supports a configuration-refresh hypothesis, not a proven internal cause.
+
+MINIMAL SUPERVISED REPRO
+1. Create an isolated unpublished GHCP agent using an approved model and identity.
+2. Add a narrow read workflow and save.
+3. Rename that tool and add a second read-only Respond-only catalogue workflow.
+4. Save; reload Build and verify both current tool definitions.
+5. In Preview, request the two read operations. Inspect actual calls/results.
+6. Follow the documented Build/save/next-turn update pattern, then a fresh chat.
+7. Compare the invoked names/capabilities with the saved definitions.
+Use only synthetic content, approved capacity and non-mutating tools.
+
+EVIDENCE AVAILABLE PRIVATELY
+Saved definitions, component IDs, conversation IDs and native workflow histories
+are retained by the operator. They are intentionally absent from this shareable
+note. No authentication tokens, cookies or raw model reasoning are included.
+
+CONTROL COMPARISON
+The underlying Invoice intake and normal package workflow run successfully when
+invoked manually. Package replay returns the existing package without a second
+file. A mismatched expected source version is refused before the package claim.
+These do not prove the agent can reliably invoke those workflows.
+
+ADDITIONAL OBSERVATION
+Agent Review reports that channel data policy could not be checked, while native
+authoring/configuration requests succeed. Relevance to the Preview mismatch is
+unknown. No DLP change or agent publication was attempted as a workaround.
+
+ASK FOR THE PRODUCT OWNER
+Is there a supported way to refresh the unpublished agent's Preview configuration
+or inspect the exact tool/instruction version used by a turn? If this is a known
+issue, what supported mitigation should makers use before publication?
+
+SCOPE
+Do not request broader permissions, change identity, replay internal endpoints,
+publish an agent, or treat a no-tool response as a successful connected test.

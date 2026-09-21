@@ -1,0 +1,97 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "LookupFinanceReference",
+  "source": "Observed native designer definition; tenant values replaced and authoring metadata removed.",
+  "status": "Bounded components demonstrated; agent-to-package execution remains blocked by inconsistent Preview configuration.",
+  "deployment": "Recreate in the supported designer, bind approved end-user connections, map the publisher/table fields, and replace placeholders. These are not solution imports or a supported unattended deployment API.",
+  "placeholders": "NORMAL_SOURCE_RECORD_ID is an operator-selected intake row. DENIED_ROW_ID is the all-zero GUID, which must not refer to a real row. Seed message IDs come from received-item selection. Keep fixed resources and allow-lists; never replace them with unconstrained model inputs.",
+  "limitations": "Current reader/generator allow one source record. Integer-cent finance checks cover the documented synthetic English AUD format. Unsupported generator branch and partial/concurrent-write coverage remain incomplete; do not use for production or approve payments.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "reference_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Exact synthetic finance reference ID ref-vendors, ref-po-7788, ref-receipt-7788, ref-gl-6100, ref-cc-204 or ref-nopo-policy; bundle-po returns vendor/PO/receipt/GL/CC entries, bundle-nopo returns vendor/no-PO policy. Not production ERP or policy. Read-only; unknown ID returns not_found."
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "source_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "text",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "version",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@if(contains(createArray('bundle-po','bundle-nopo','ref-vendors','ref-po-7788','ref-receipt-7788','ref-gl-6100','ref-cc-204','ref-nopo-policy'),toLower(trim(coalesce(triggerBody()?['text'],'')))),'ok','not_found')",
+            "text_1": "@toLower(trim(coalesce(triggerBody()?['text'],'')))",
+            "text_2": "@if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-nopo-policy'),'[{\"source_id\":\"ref-nopo-policy\",\"text\":\"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review.\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-cc-204'),'[{\"source_id\":\"ref-cc-204\",\"text\":\"Cost centre CC-204 approved for synthetic finance operations\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-gl-6100'),'[{\"source_id\":\"ref-gl-6100\",\"text\":\"GL 6100 approved for synthetic services expense\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-receipt-7788'),'[{\"source_id\":\"ref-receipt-7788\",\"text\":\"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-po-7788'),'[{\"source_id\":\"ref-po-7788\",\"text\":\"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-vendors'),'[{\"source_id\":\"ref-vendors\",\"text\":\"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204.\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'bundle-nopo'),'[{\"source_id\":\"ref-vendors\",\"text\":\"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204.\"},{\"source_id\":\"ref-nopo-policy\",\"text\":\"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review.\"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'bundle-po'),'[{\"source_id\":\"ref-vendors\",\"text\":\"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204.\"},{\"source_id\":\"ref-po-7788\",\"text\":\"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD\"},{\"source_id\":\"ref-receipt-7788\",\"text\":\"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2\"},{\"source_id\":\"ref-gl-6100\",\"text\":\"GL 6100 approved for synthetic services expense\"},{\"source_id\":\"ref-cc-204\",\"text\":\"Cost centre CC-204 approved for synthetic finance operations\"}]','[]'))))))))",
+            "text_3": "synthetic-finance-catalogue-2026-09-21; not production ERP/policy"
+          }
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

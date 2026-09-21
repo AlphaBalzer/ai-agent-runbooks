@@ -1,0 +1,122 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "ReadInvoiceMessage",
+  "source": "Observed native designer definition; tenant values replaced and authoring metadata removed.",
+  "status": "Bounded components demonstrated; agent-to-package execution remains blocked by inconsistent Preview configuration.",
+  "deployment": "Recreate in the supported designer, bind approved end-user connections, map the publisher/table fields, and replace placeholders. These are not solution imports or a supported unattended deployment API.",
+  "placeholders": "NORMAL_SOURCE_RECORD_ID is an operator-selected intake row. DENIED_ROW_ID is the all-zero GUID, which must not refer to a real row. Seed message IDs come from received-item selection. Keep fixed resources and allow-lists; never replace them with unconstrained model inputs.",
+  "limitations": "Current reader/generator allow one source record. Integer-cent finance checks cover the documented synthetic English AUD format. Unsupported generator branch and partial/concurrent-write coverage remain incomplete; do not use for production or approve payments.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "record_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Existing approved Invoice pilot record ID. Reads its saved source snapshot and state only; never ingests mail, creates files, updates rows or starts approval. This is a stored snapshot, not a fresh mailbox read."
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Read_approved_record": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "parameters": {
+            "organization": "__DATAVERSE_ORGANIZATION_URL__",
+            "entityName": "cr090_ghcpinvoicereviews",
+            "$select": "cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_sourcefileurl,cr090_packagefileurl,cr090_reviewpayload,versionnumber",
+            "$filter": "@concat('cr090_ghcpinvoicereviewid eq ',if(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__'),triggerBody()?['text'],'__DENIED_ROW_ID__'))",
+            "$top": 2
+          },
+          "host": {
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionName": "shared_commondataserviceforapps-1",
+            "operationId": "ListRecordsWithOrganization"
+          }
+        }
+      },
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "source_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "record_json",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "version",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@if(not(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__')),'denied',if(equals(actions('Read_approved_record')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1),'ok',if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),0),'not_found','failed')),if(or(equals(outputs('Read_approved_record')?['statusCode'],401),equals(outputs('Read_approved_record')?['statusCode'],403)),'denied',if(or(equals(actions('Read_approved_record')?['status'],'TimedOut'),equals(outputs('Read_approved_record')?['statusCode'],429),greaterOrEquals(coalesce(outputs('Read_approved_record')?['statusCode'],0),500)),'unavailable','failed'))))",
+            "text_1": "@if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),first(outputs('Read_approved_record')?['body/value'])?['cr090_ghcpinvoicereviewid'],'')",
+            "text_2": "@if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),string(first(outputs('Read_approved_record')?['body/value'])),'')",
+            "text_3": "@if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),string(first(outputs('Read_approved_record')?['body/value'])?['versionnumber']),'')"
+          }
+        },
+        "runAfter": {
+          "Read_approved_record": [
+            "Succeeded",
+            "Failed",
+            "TimedOut",
+            "Skipped"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

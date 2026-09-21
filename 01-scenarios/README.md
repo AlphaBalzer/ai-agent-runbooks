@@ -183,6 +183,16 @@ Below is the standard structure, using **HR Onboarding Agent** as the reference 
 
 ---
 
+## GitHub Copilot harness adaptations
+
+These separate folders preserve the original scenarios. Read the recorded
+results and limitations before building or presenting a live demonstration.
+
+| Scenario | Scope | Status |
+|---|---|---|
+| [Shared Inbox and Request Processing Agent (GHCP)](./Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md) | Fixed shared mailbox, bounded text attachments, approved references and review-only drafts | Bounded connected demonstration; owner review and disclosed limitations remain |
+| [Finance Document Processing and Approval Agent (GHCP)](./Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md) | Invoice evidence and controlled review-package creation; no approval notifications, posting or payment | Normal workflow components demonstrated; dependable end-to-end agent execution blocked in Preview |
+
 ## 🔗 Quick Links
 
 - [← Back to Repository Root](../README.md)

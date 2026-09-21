@@ -1,0 +1,176 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "ReadSharedMailboxMessage",
+  "source": "Native saved workflow definition after controlled tests; authoring metadata removed.",
+  "deployment": "Recreate in the supported GHCP workflow designer, bind the approved end-user connection, set the fixed mailbox placeholder, review and publish only the workflow. Not a supported unattended deployment API or solution export.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "messageId",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Exact received message ID selected by the reviewer. This workflow can only read from the configured GHCP test mailbox."
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Get_email": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "parameters": {
+            "includeAttachments": true,
+            "messageId": "@triggerBody()?['text']",
+            "mailboxAddress": "__TEST_SHARED_MAILBOX__",
+            "fetchSensitivityLabelMetadata": true,
+            "extractSensitivityLabel": true
+          },
+          "host": {
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+            "connectionName": "shared_office365",
+            "operationId": "GetEmailV2"
+          }
+        }
+      },
+      "Select": {
+        "type": "Select",
+        "inputs": {
+          "from": "@if(equals(outputs('Get_email')?['body/hasAttachments'], true), outputs('Get_email')?['body/attachments'], json('[]'))",
+          "select": {
+            "source_id": "@item()?['id']",
+            "name": "@item()?['name']",
+            "status": "@if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), 'ok', 'unsupported_input')",
+            "text": "@if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), base64ToString(item()?['contentBytes']), '')"
+          }
+        },
+        "runAfter": {
+          "Get_email": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "body",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "source_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "subject",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "sender",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "boolean": {
+                "title": "has_attachments",
+                "type": "boolean",
+                "x-ms-content-hint": "BOOLEAN",
+                "x-ms-dynamically-added": true
+              },
+              "text_4": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_5": {
+                "title": "error_code",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_6": {
+                "title": "attachments",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_7": {
+                "title": "attachment_status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3",
+              "boolean",
+              "text_4",
+              "text_5",
+              "text_6",
+              "text_7"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), outputs('Get_email')?['body/body'], '')",
+            "text_1": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), outputs('Get_email')?['body/id'], '')",
+            "text_2": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), outputs('Get_email')?['body/subject'], '')",
+            "text_3": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), outputs('Get_email')?['body/from'], '')",
+            "boolean": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), outputs('Get_email')?['body/hasAttachments'], false)",
+            "text_4": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), 'ok', if(or(equals(outputs('Get_email')?['statusCode'], 401), equals(outputs('Get_email')?['statusCode'], 403)), 'denied', if(or(equals(actions('Get_email')?['status'], 'TimedOut'), equals(outputs('Get_email')?['statusCode'], 429), greaterOrEquals(coalesce(outputs('Get_email')?['statusCode'], 0), 500)), 'unavailable', 'failed')))",
+            "text_5": "@if(equals(actions('Get_email')?['status'], 'Succeeded'), '', coalesce(outputs('Get_email')?['body/error/code'], actions('Get_email')?['code'], actions('Get_email')?['status'], 'UnknownReadFailure'))",
+            "text_6": "@if(equals(actions('Select')?['status'], 'Succeeded'), string(body('Select')), '[]')",
+            "text_7": "@if(not(equals(actions('Get_email')?['status'], 'Succeeded')), 'not_read', if(equals(actions('Select')?['status'], 'Succeeded'), 'processed', 'failed'))"
+          }
+        },
+        "runAfter": {
+          "Select": [
+            "Succeeded",
+            "Failed",
+            "TimedOut",
+            "Skipped"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

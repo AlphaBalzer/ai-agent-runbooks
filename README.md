@@ -55,6 +55,18 @@ Whether you're building your first agent or scaling across multiple business dom
 - 📄 [Document Processing & Extraction Agent](./01-scenarios/Document-Processing-and-Extraction-Agent/) — Classify, extract, validate, and route high-volume documents at production accuracy, with confidence-based human review and output shaped to whatever the downstream system actually accepts.
 
 
+### GitHub Copilot harness scenario adaptations
+
+These separate adaptations preserve the originals and include capability
+contracts, Markdown skills, rebuild references and recorded results. Shared Inbox
+has a demonstrated bounded connected pilot. Invoice has demonstrated workflow
+components, but reliable end-to-end agent execution remains blocked in Preview.
+These are reviewable scenario guides, not production-ready solution exports.
+
+- [Shared Inbox and Request Processing Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): fixed-mailbox evidence gathering, cited response drafts and human review; no sending.
+- [Finance Document Processing and Approval Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): invoice evidence and bounded review-package workflows; approval notifications, posting and payment remain off.
+- [Trainer quickstart](./TRAINING-QUICKSTART.txt) and [current Preview issue](./PREVIEW-ISSUE-REPRO.txt).
+
 **Need implementation patterns?** Check out [02-patterns/](./02-patterns/) for proven technical approaches including Copilot Studio orchestration, RAG patterns, and multi-agent design.
 
 - 🧠 [Enterprise RAG Pattern](./02-patterns/Enterprise-RAG-Pattern/) — Multi-source, governed RAG pattern that grounds LLM responses in organizational data (SharePoint, OneDrive, Dataverse, Azure SQL, Fabric, Dynamics CRM) with document-level access control and full citation trails via Azure AI Search
@@ -124,4 +136,3 @@ Use of Microsoft trademarks or logos in modified versions of this project must n
 Any use of third-party trademarks or logos is subject to the policies of those third parties.
 
 ---
-

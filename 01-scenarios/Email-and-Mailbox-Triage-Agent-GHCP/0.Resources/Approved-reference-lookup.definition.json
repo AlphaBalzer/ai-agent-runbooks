@@ -1,0 +1,94 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "LookupApprovedReference",
+  "source": "Native saved workflow definition after controlled tests; authoring metadata removed.",
+  "deployment": "Recreate in the supported GHCP workflow designer, bind the approved end-user connection, set the fixed mailbox placeholder, review and publish only the workflow. Not a supported unattended deployment API or solution export.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "reference_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Exact approved test reference ID: REF-POLICY-INTAKE, REF-STATUS-SR4421 or REF-ROUTES. Unknown IDs return not_found, never generated guidance."
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "source_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "text",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "version",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@if(contains(createArray('REF-POLICY-INTAKE', 'REF-STATUS-SR4421', 'REF-ROUTES'), triggerBody()?['text']), 'ok', 'not_found')",
+            "text_1": "@if(contains(createArray('REF-POLICY-INTAKE', 'REF-STATUS-SR4421', 'REF-ROUTES'), triggerBody()?['text']), triggerBody()?['text'], '')",
+            "text_2": "@if(equals(triggerBody()?['text'], 'REF-POLICY-INTAKE'), 'For shared inbox requests, collect requester name, organization, request reference if known, and a short description of the request. Do not promise completion time unless an approved status source states it.', if(equals(triggerBody()?['text'], 'REF-STATUS-SR4421'), 'Request SR-4421 is open with the operations team. Last approved status: waiting for document verification.', if(equals(triggerBody()?['text'], 'REF-ROUTES'), 'Document copy requests route to document-requests-review. Status enquiries route to operations-review. Policy questions route to policy-review.', '')))",
+            "text_3": "GHCP Synthetic Reference v1"
+          }
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

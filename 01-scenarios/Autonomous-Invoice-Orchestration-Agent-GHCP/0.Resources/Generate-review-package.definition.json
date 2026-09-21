@@ -1,0 +1,398 @@
+{
+  "artifact_type": "reconstruction_reference_not_importable_solution",
+  "agent_tool_name": "GeneratePaymentFormFlow",
+  "source": "Observed native designer definition; tenant values replaced and authoring metadata removed.",
+  "status": "Bounded components demonstrated; agent-to-package execution remains blocked by inconsistent Preview configuration.",
+  "deployment": "Recreate in the supported designer, bind approved end-user connections, map the publisher/table fields, and replace placeholders. These are not solution imports or a supported unattended deployment API.",
+  "placeholders": "NORMAL_SOURCE_RECORD_ID is an operator-selected intake row. DENIED_ROW_ID is the all-zero GUID, which must not refer to a real row. Seed message IDs come from received-item selection. Keep fixed resources and allow-lists; never replace them with unconstrained model inputs.",
+  "limitations": "Current reader/generator allow one source record. Integer-cent finance checks cover the documented synthetic English AUD format. Unsupported generator branch and partial/concurrent-write coverage remain incomplete; do not use for production or approve payments.",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "record_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Approved Invoice intake record ID. Explicit composite action: deterministic validation, unique package claim, fixed SharePoint review file and package-state row update. No approval start/payment."
+              },
+              "text_1": {
+                "title": "expected_version",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true,
+                "description": "Exact Dataverse version returned by the latest approved record read. A mismatch stops generation for renewed review."
+              }
+            },
+            "required": [
+              "text",
+              "text_1"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Initialize_package_result": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "package_result",
+              "type": "Object",
+              "value": "@json('{\"status\":\"needs_review\",\"record_id\":\"\",\"package_file_url\":\"\",\"reason\":\"Source version, evidence or supported scope requires review\",\"approval_state\":\"not_requested\"}')"
+            }
+          ]
+        }
+      },
+      "Read_approved_record": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "parameters": {
+            "organization": "__DATAVERSE_ORGANIZATION_URL__",
+            "entityName": "cr090_ghcpinvoicereviews",
+            "$select": "cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_sourcefileurl,cr090_packagefileurl,cr090_reviewpayload,versionnumber",
+            "$filter": "@concat('cr090_ghcpinvoicereviewid eq ',if(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__'),triggerBody()?['text'],'__DENIED_ROW_ID__'))",
+            "$top": 2
+          },
+          "host": {
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+            "connectionName": "shared_commondataserviceforapps-1",
+            "operationId": "ListRecordsWithOrganization"
+          }
+        },
+        "runAfter": {
+          "Initialize_package_result": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Source_current": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "equals": [
+                "@if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1),if(and(equals(string(first(outputs('Read_approved_record')?['body/value'])?['versionnumber']),triggerBody()?['text_1']),equals(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewstate'],'source_saved'),not(empty(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewpayload']))),'yes','no'),'no')",
+                "yes"
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Stored_snapshot": {
+            "type": "Compose",
+            "inputs": "@json(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewpayload'])"
+          },
+          "Text_source_supported": {
+            "type": "If",
+            "expression": {
+              "and": [
+                {
+                  "equals": [
+                    "@if(equals(length(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]'))),1),if(and(equals(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['status'],'ok'),not(empty(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['text'])),lessOrEquals(length(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['text']),65536)),'yes','no'),'no')",
+                    "yes"
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Invoice_fields": {
+                "type": "Select",
+                "inputs": {
+                  "from": "@json('[{}]')",
+                  "select": {
+                    "supplier": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Supplier: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Supplier: '))),decodeUriComponent('%0A')))),'')",
+                    "invoice_number": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Number: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Number: '))),decodeUriComponent('%0A')))),'')",
+                    "invoice_date": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Date: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Date: '))),decodeUriComponent('%0A')))),'')",
+                    "due_date": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Due Date: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Due Date: '))),decodeUriComponent('%0A')))),'')",
+                    "po": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'PO: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'PO: '))),decodeUriComponent('%0A')))),'')",
+                    "line": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Line 1: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Line 1: '))),decodeUriComponent('%0A')))),'')",
+                    "services": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Services: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Services: '))),decodeUriComponent('%0A')))),'')",
+                    "subtotal_text": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Subtotal AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Subtotal AUD '))),decodeUriComponent('%0A')))),'')",
+                    "tax_text": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Tax AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Tax AUD '))),decodeUriComponent('%0A')))),'')",
+                    "total_text": "@if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Total AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Total AUD '))),decodeUriComponent('%0A')))),'')",
+                    "attachment_source_id": "@first(outputs('Stored_snapshot')?['attachments'])?['source_id']",
+                    "source_text": "@replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')"
+                  }
+                }
+              },
+              "Financial_checks": {
+                "type": "Select",
+                "inputs": {
+                  "from": "@json('[{}]')",
+                  "select": {
+                    "vendor_id": "@if(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),'VEND-ACME-SYN',if(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),'VEND-NOPO-SYN',''))",
+                    "legal_entity": "SYN-ENTITY",
+                    "currency": "AUD",
+                    "path": "@if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'po',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'nopo','exception'))",
+                    "subtotal_cents": "@if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1))",
+                    "tax_cents": "@if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1)",
+                    "total_cents": "@if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1)",
+                    "identity_complete": "@and(not(empty(if(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),'VEND-ACME-SYN',if(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),'VEND-NOPO-SYN','')))),not(empty(first(body('Invoice_fields'))?['invoice_number'])),lessOrEquals(length(first(body('Invoice_fields'))?['invoice_number']),64),not(empty(first(body('Invoice_fields'))?['invoice_date'])))",
+                    "terms_supported": "@or(and(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),not(empty(first(body('Invoice_fields'))?['due_date']))),and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')))",
+                    "source_flags": "@or(contains(toLower(first(body('Invoice_fields'))?['source_text']),'instruction to agent'),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'instruction to agent'),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'total aud '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'total aud ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('total aud ',first(body('Invoice_fields'))?['total_text']))))),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'gl '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'gl ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('gl ',if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'6100','6200')))))),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'cost centre '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'cost centre ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('cost centre ',if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'cc-204','cc-310')))))))",
+                    "arithmetic_matches": "@and(greaterOrEquals(if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1)),0),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1),0),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),0),equals(add(if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1)),if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1)),if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1)))",
+                    "policy_limit": "@or(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),and(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),lessOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),50000),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),0)))",
+                    "gl": "@if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'6100',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'6200',''))",
+                    "cost_centre": "@if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'CC-204',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'CC-310',''))"
+                  }
+                },
+                "runAfter": {
+                  "Invoice_fields": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Review_form": {
+                "type": "Select",
+                "inputs": {
+                  "from": "@json('[{}]')",
+                  "select": {
+                    "template_version": "synthetic-finance-review-v1",
+                    "document_type": "@if(and(equals(first(body('Financial_checks'))?['identity_complete'],true),equals(first(body('Financial_checks'))?['terms_supported'],true),equals(first(body('Financial_checks'))?['source_flags'],false),equals(first(body('Financial_checks'))?['arithmetic_matches'],true),equals(first(body('Financial_checks'))?['policy_limit'],true)),'payment_request_review','invoice_exception_review')",
+                    "status": "@if(and(equals(first(body('Financial_checks'))?['identity_complete'],true),equals(first(body('Financial_checks'))?['terms_supported'],true),equals(first(body('Financial_checks'))?['source_flags'],false),equals(first(body('Financial_checks'))?['arithmetic_matches'],true),equals(first(body('Financial_checks'))?['policy_limit'],true)),'ok','needs_review')",
+                    "source_record_id": "@triggerBody()?['text']",
+                    "source_version": "@triggerBody()?['text_1']",
+                    "invoice_fields": "@first(body('Invoice_fields'))",
+                    "deterministic_checks": "@first(body('Financial_checks'))",
+                    "approved_references": "@json('[{\"source_id\":\"ref-vendors\",\"text\":\"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204.\"},{\"source_id\":\"ref-po-7788\",\"text\":\"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD\"},{\"source_id\":\"ref-receipt-7788\",\"text\":\"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2\"},{\"source_id\":\"ref-gl-6100\",\"text\":\"GL 6100 approved for synthetic services expense\"},{\"source_id\":\"ref-cc-204\",\"text\":\"Cost centre CC-204 approved for synthetic finance operations\"},{\"source_id\":\"ref-nopo-policy\",\"text\":\"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review.\"}]')",
+                    "source_file_url": "@first(outputs('Read_approved_record')?['body/value'])?['cr090_sourcefileurl']",
+                    "requires_human_review": "@true",
+                    "approval_state": "not_requested",
+                    "limitations": "Approved synthetic catalogue and English AUD text format only. Integer-cent checks use the declared source amounts; no tax-law, OCR, ERP, approval or payment validation. Failed or missing fields remain exceptions. Negative numeric sentinel -1 means missing/invalid, never a payable amount."
+                  }
+                },
+                "runAfter": {
+                  "Financial_checks": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Claim_package": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                    "entityName": "cr090_ghcpinvoicereviews",
+                    "item/cr090_intakekey": "@concat('package|',triggerBody()?['text'])",
+                    "item/cr090_invoicekey": "@if(equals(first(body('Financial_checks'))?['identity_complete'],true),concat('SYN-ENTITY|',first(body('Financial_checks'))?['vendor_id'],'|',toUpper(trim(first(body('Invoice_fields'))?['invoice_number']))),null)",
+                    "item/cr090_reviewstate": "package_claimed",
+                    "item/cr090_reviewpayload": "@string(first(body('Review_form')))"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps-1",
+                    "operationId": "CreateRecordWithOrganization"
+                  }
+                },
+                "runAfter": {
+                  "Review_form": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Save_package": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "dataset": "__INVOICE_SITE_URL__",
+                    "folderPath": "/Shared Documents/ReviewPackages",
+                    "name": "@concat(outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid'],'.json')",
+                    "body": "@string(first(body('Review_form')))"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                    "connectionName": "shared_sharepointonline-1",
+                    "operationId": "CreateFile"
+                  }
+                },
+                "runAfter": {
+                  "Claim_package": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Record_package": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                    "entityName": "cr090_ghcpinvoicereviews",
+                    "recordId": "@outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid']",
+                    "item/cr090_reviewstate": "package_ready",
+                    "item/cr090_packagefileurl": "@concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_package')?['body/Path']),'%2F','/'))"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps-1",
+                    "operationId": "UpdateOnlyRecordWithOrganization"
+                  }
+                },
+                "runAfter": {
+                  "Save_package": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Reconcile_package": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "organization": "__DATAVERSE_ORGANIZATION_URL__",
+                    "entityName": "cr090_ghcpinvoicereviews",
+                    "$select": "cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_packagefileurl,cr090_reviewpayload,versionnumber",
+                    "$filter": "@concat('(cr090_intakekey eq ''package|',replace(triggerBody()?['text'],'''',''''''),'''',if(equals(first(body('Financial_checks'))?['identity_complete'],true),concat(' or cr090_invoicekey eq ''',replace(concat('SYN-ENTITY|',first(body('Financial_checks'))?['vendor_id'],'|',toUpper(trim(first(body('Invoice_fields'))?['invoice_number']))),'''',''''''),''''),''),') and startswith(cr090_intakekey,''package|'')')",
+                    "$top": 2
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps-1",
+                    "operationId": "ListRecordsWithOrganization"
+                  }
+                },
+                "runAfter": {
+                  "Record_package": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut",
+                    "Skipped"
+                  ]
+                }
+              },
+              "Package_outcome": {
+                "type": "Select",
+                "inputs": {
+                  "from": "@json('[{}]')",
+                  "select": {
+                    "status": "@if(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),and(equals(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewstate'],'package_ready'),not(empty(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl']))),false),if(equals(actions('Record_package')?['status'],'Succeeded'),first(body('Review_form'))?['status'],'duplicate'),if(or(equals(outputs('Claim_package')?['statusCode'],401),equals(outputs('Claim_package')?['statusCode'],403)),'denied','unknown_outcome'))",
+                    "record_id": "@coalesce(outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid'],if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_ghcpinvoicereviewid'],''),'')",
+                    "package_file_url": "@coalesce(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl'],null),if(equals(actions('Save_package')?['status'],'Succeeded'),concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_package')?['body/Path']),'%2F','/')),''),'')",
+                    "package_file_id": "@coalesce(outputs('Save_package')?['body/Id'],'')",
+                    "record_version": "@if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),string(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['versionnumber']),'')",
+                    "created": "@equals(actions('Claim_package')?['status'],'Succeeded')",
+                    "approval_state": "not_requested",
+                    "requires_human_review": "@true",
+                    "package_json": "@if(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),and(equals(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewstate'],'package_ready'),not(empty(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl']))),false),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewpayload'],'')",
+                    "reason": "@concat('claim=',actions('Claim_package')?['status'],';file=',actions('Save_package')?['status'],';record=',actions('Record_package')?['status'],';reconcile=',actions('Reconcile_package')?['status'])"
+                  }
+                },
+                "runAfter": {
+                  "Reconcile_package": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut",
+                    "Skipped"
+                  ]
+                }
+              },
+              "Set_package_result": {
+                "type": "SetVariable",
+                "inputs": {
+                  "name": "package_result",
+                  "value": "@first(body('Package_outcome'))"
+                },
+                "runAfter": {
+                  "Package_outcome": [
+                    "Succeeded"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "actions": {}
+            },
+            "runAfter": {
+              "Stored_snapshot": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "else": {
+          "actions": {}
+        },
+        "runAfter": {
+          "Read_approved_record": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Respond_to_the_agent": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "title": "status",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_1": {
+                "title": "record_id",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_2": {
+                "title": "result_json",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              },
+              "text_3": {
+                "title": "version",
+                "type": "string",
+                "x-ms-content-hint": "TEXT",
+                "x-ms-dynamically-added": true
+              }
+            },
+            "required": [
+              "text",
+              "text_1",
+              "text_2",
+              "text_3"
+            ]
+          },
+          "statusCode": 200,
+          "body": {
+            "text": "@if(not(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__')),'denied',if(not(equals(actions('Read_approved_record')?['status'],'Succeeded')),if(or(equals(outputs('Read_approved_record')?['statusCode'],401),equals(outputs('Read_approved_record')?['statusCode'],403)),'denied','unavailable'),if(not(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),'needs_review',if(and(not(equals(actions('Source_current')?['status'],'Succeeded')),equals(variables('package_result')?['status'],'needs_review')),'unknown_outcome',variables('package_result')?['status']))))",
+            "text_1": "@coalesce(variables('package_result')?['record_id'],'')",
+            "text_2": "@string(variables('package_result'))",
+            "text_3": "@coalesce(variables('package_result')?['record_version'],'')"
+          }
+        },
+        "runAfter": {
+          "Source_current": [
+            "Succeeded",
+            "Failed",
+            "TimedOut",
+            "Skipped"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  }
+}
