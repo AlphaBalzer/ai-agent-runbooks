@@ -10,14 +10,19 @@ preparation, not automated intake and action.
 | Area | Recorded implementation status |
 |---|---|
 | Selected-message assessment | Connected reading from a fixed test mailbox, classification, reference lookup, response text and route recommendations demonstrated with synthetic data. Every output requires human review. |
-| Automatic intake and downstream actions | Mail-arrival integration, forwarding, record creation, sending, document delivery and saved Outlook drafts are not implemented in this package. The workflow-to-GHCP invocation path has not been established; agent-to-workflow support is not evidence of the reverse direction. |
+| Workflow-to-agent connection | The native Agent step called the published agent successfully in one read-only node run, including a real synthetic-mail read and approved-reference lookup. This is not a complete mail-arrival-to-action run. |
+| Automatic intake and downstream actions | A test-only arrival and human-approved forwarding workflow is saved as a draft in the test environment, not supplied here as an export. It has not been published or run. Forwarding permissions and execution controls remain outstanding; no sending, records or document delivery have been demonstrated. |
 | Attachments and references | Up to five non-inline `.txt` attachments, each no more than 64 KB. No PDF/OCR or full-conversation retrieval. References are fictional test entries, not company policy. |
 | Remaining evidence | Effective denial after immediate access revocation and independent completion of both skills remain unproven. Full acceptance remains open. |
-| Packaging | Guides, skill instructions and workflow rebuild references are supplied, not an importable solution. The test agent remains unpublished. |
+| Packaging | Guides, skill instructions and workflow rebuild references are supplied, not an importable solution. The existing read-only test agent has been published without channels or added sharing. |
 
 The [recorded results](Actual-test-record.json) distinguish observed outcomes from unproven
-behavior. The existing record covers 26 Preview prompts; it does not establish full end-to-end
-delivery or production approval.
+behavior. That historical record covers 26 Preview prompts. The additional single workflow-node
+run below does not establish full end-to-end delivery or production approval.
+
+| Additional case | Observed outcome | Scope |
+|---|---|---|
+| `WORKFLOW-CALL-001`, 21 September 2026 | One mailbox read and one reference lookup completed. Raw response contained all eleven required keys, matching synthetic source quotes, `status: ok` and human review required. No business-write calls observed. | One supervised native Agent-node run against the published agent; no automatic trigger or downstream action. |
 
 Before final end-to-end handoff, complete the agreed mail-arrival and action integration and
 demonstrate the complete path. The documentation's delivery checklist does not complete or
@@ -120,6 +125,79 @@ Keep consent continuations in the same test conversation and retain failed attem
 
 ---
 
+## Connect the Published Agent
+
+The native [Agent node](https://learn.microsoft.com/en-us/microsoft-copilot-studio/workflows-experience/agent-node-workflow)
+supports calling an existing **published** agent. This is distinct from adding a workflow as a
+tool to the agent.
+
+1. Configure and demonstrate the read/reference tools and skills first.
+2. Publish the agent through the agreed approval process. For a workflow-only test, do not add
+   user-facing channels, catalog submission or sharing unless separately required.
+3. In the intake workflow, add **Agent**, choose the published agent and bind the permitted connection.
+4. In **Message**, use the connected prompt from the sample page with **Message Id** from the
+   arrival trigger. Do not hard-code an old ID, use Internet Message Id, or paste an expected answer.
+5. Keep the downstream action separate from the two read-only agent tools.
+
+The node's **Result** is the agent's response text; parse and validate the JSON before routing.
+The node's completion status is not the business `status` inside that JSON. The raw response
+includes `missing_facts` and `conflicts` even when the rendered output viewer hides empty arrays.
+
+The supplied contract uses four categories and does not contain every urgency/domain field in
+the standard scenario's example. If the customer needs additional fields, update instructions,
+skills, consuming workflow and expected tests together. The recorded instruction block retains
+its historical agent name; changing a display name alone does not change its behavior.
+
+Use Microsoft authentication and record the model. Keep memory, web search and unnecessary tools
+off during controlled exercises. Use actual approved business references for customer delivery;
+the supplied catalogue is fictional.
+
+## Action Controls
+
+Routine, low-risk routing can be automatic when the business owner has approved that policy.
+The current review-only configuration and forwarding exercise are not an automatic-routing
+release. Keep human approval for uncertain or sensitive cases and model-drafted external replies.
+
+| Control | Implementation detail |
+|---|---|
+| Scope | Fixed permitted source mailbox, destination and fields. Model text must not select arbitrary recipients or endpoints. |
+| Source and approval | Bind the review to the exact message and proposed action. Recheck material content/version changes before the effect. |
+| Permissions | Check actual connection rights. Full Access permits reading/managing; forwarding from a shared mailbox needs appropriate sending rights. Grant only explicitly approved rights. |
+| Decision | Validate response schema, business status and source IDs. Reject malformed, denied or failed results rather than treating them as an answer. |
+| Duplicate protection | Atomically claim a stable mailbox/message/action key before the effect. Concurrency one and a subject filter alone do not prevent duplicate effects. |
+| Recovery | Preserve successful IDs and reconcile unknown outcomes before retry. Confirm retry policy in the saved runtime definition, not just its designer label. |
+| Disablement | Stop new intake, account for queued/in-flight work and remove temporary permissions after the agreed test. |
+
+Exercise the chosen action independently with synthetic data, including rejection, replay,
+concurrent duplication and uncertain write/readback. Then demonstrate the complete received
+message, GHCP assessment, applicable review and actual action. An assessment-only result does
+not prove action delivery.
+
+## Troubleshooting
+
+| Symptom | What to inspect |
+|---|---|
+| Agent absent from the workflow selector | Publish the intended agent after approval, then refresh the selector. Do not create a duplicate inline agent merely to bypass stale UI. |
+| Agent reports an attached tool unavailable | Reload saved configuration, inspect the attached mapping and native activity. Stop repeated identical probes; do not count a no-tool answer as connected execution. |
+| Trigger reads the wrong folder | Use a folder belonging to the fixed shared mailbox, not the connection owner's folder ID. The test setup uses custom value `Inbox`. |
+| Typed mailbox or reviewer is not saved | Select the resolved recipient token and read back the saved value; typing alone may leave the field unbound. |
+| Prompt or expression differs after editing | Commit the edit, then inspect the saved expression. Do not run a workflow with concatenated or incomplete expressions. |
+| An unexpected loop appears | Confirm the selected token's cardinality and Split On behavior. Do not place downstream consumers outside an automatically created per-item loop. |
+| Empty arrays disappear in the node viewer | Inspect the raw agent response and actual downstream output before diagnosing a contract failure. |
+| Human review receives a failed assessment | Gate notifications appropriately; forwarding must still fail closed on invalid evidence or a decision other than Approve. |
+
+Detailed controls belong here; they do not require adding a new infrastructure platform to a
+simple mailbox scenario. Reuse the organization's approved workflow and record mechanisms.
+
+### Evaluation Notes
+
+Native agent **Evaluate** General quality scoring is not an expected-answer comparison or
+proof of correct permissions and writes. Keep deterministic evidence checks and human review
+alongside any quality score. Preserve failed expectations, record corrections separately and
+retain private source content only in approved storage.
+
+---
+
 ## Trainer Walkthrough
 
 | Step | Page or screen | Explain |
@@ -142,8 +220,10 @@ as a recorded example rather than claiming live success.
 - [GitHub Copilot harness overview](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agents-experience/overview)
 - [Upload a skill](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agents-experience/skills-add-existing)
 - [Add a workflow tool (preview)](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agents-experience/tools-add-workflow)
+- [Call an existing agent from a workflow](https://learn.microsoft.com/en-us/microsoft-copilot-studio/workflows-experience/agent-node-workflow)
 - [Workflow designer and test behavior](https://learn.microsoft.com/en-us/microsoft-copilot-studio/workflows-experience/flow-designer)
 - [Office 365 Outlook connector](https://learn.microsoft.com/en-us/connectors/office365/)
 
-The workflow-tool guidance confirms the agent calling a workflow. It does not establish a
-mail-triggered workflow calling a GHCP agent. Verify the required intake integration independently.
+The Agent-node guidance documents workflow-to-agent invocation; the workflow-tool guidance
+documents the opposite direction. Demonstrate the complete intake and action path in the target
+environment rather than infer it from either connection alone.
