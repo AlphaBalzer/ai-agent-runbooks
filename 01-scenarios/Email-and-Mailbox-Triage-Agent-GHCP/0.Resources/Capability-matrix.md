@@ -1,5 +1,9 @@
 # Capability Matrix
 
+This matrix describes the **supplied review-only components**. The four scenario pages also
+cover the end-to-end delivery design; arrival-driven intake and downstream actions are not
+enabled by these resources. See [delivery status](README.md#delivery-status).
+
 ## Shared controls and status
 
 All rows require the approved test environment, applicable permissions/capacity and a named reviewer. Microsoft authentication and fixed resource scope must be enforced before returning content. Connection identity is not email sender identity. Skill text grants no permission.
@@ -44,4 +48,5 @@ the other capability. A skill is not an access-control mechanism.
 | Optional mailbox draft, deferred | Approved recipient/subject/body -> new draft ID | Separate restricted Graph `POST /users/{mailbox}/messages`, not threaded reply | Delegated `Mail.ReadWrite.Shared` plus mailbox rights; exact-preview approval | Disabled. Permission exceeds draft-create, so restrict operation/schema and block alternate endpoints. Reconcile before retry; never send. |
 | Send/forward/delete/archive/move/mark-read/document delivery | Any such request -> `capability_disabled` | No action attached | No authorization granted by this draft | Check all tool paths, not just skills. Test attempts cause no effects; retain denial evidence. |
 
-Use the [runbook](../3.Runbook.md) and [architecture](../2.Architecture.md) for source links and connection details.
+Use the [runbook](../3.Runbook.md), [architecture](../2.Architecture.md) and
+[workflow setup](README.md#workflow-setup) for source links and connection details.

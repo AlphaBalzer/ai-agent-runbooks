@@ -57,15 +57,15 @@ Whether you're building your first agent or scaling across multiple business dom
 
 ### GitHub Copilot harness scenario adaptations
 
-These separate adaptations preserve the originals and include capability
-contracts, Markdown skills, rebuild references and recorded results. Shared Inbox
-has a demonstrated bounded connected pilot. Invoice has demonstrated workflow
-components, but reliable end-to-end agent execution remains blocked in Preview.
-These are reviewable scenario guides, not production-ready solution exports.
+These separate versions use the same business-scenario structure as the standard-harness
+examples, with focused GHCP enhancements. They include Markdown guides, skills, technical
+references and recorded results, not production-ready solution exports.
+Invoice's workflow components have been demonstrated, but reliable end-to-end agent execution
+remains blocked in Preview.
 
-- [Shared Inbox and Request Processing Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): fixed-mailbox evidence gathering, cited response drafts and human review; no sending.
+- [Email & Shared Mailbox Triage Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): evidence-based investigation before routing and response decisions. See [delivery status](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#delivery-status) for supplied assessment components and remaining integrations.
 - [Finance Document Processing and Approval Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): invoice evidence and bounded review-package workflows; approval notifications, posting and payment remain off.
-- [Trainer quickstart](./TRAINING-QUICKSTART.txt) and [current Preview issue](./PREVIEW-ISSUE-REPRO.txt).
+- [Shared Inbox trainer walkthrough](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#trainer-walkthrough), [two-scenario trainer quickstart](./TRAINING-QUICKSTART.txt) and [Invoice Preview issue](./PREVIEW-ISSUE-REPRO.txt).
 
 **Need implementation patterns?** Check out [02-patterns/](./02-patterns/) for proven technical approaches including Copilot Studio orchestration, RAG patterns, and multi-agent design.
 
