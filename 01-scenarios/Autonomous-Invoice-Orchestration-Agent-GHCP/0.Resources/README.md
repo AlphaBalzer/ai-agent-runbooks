@@ -4,6 +4,35 @@ Use the [main runbook](../3.Runbook.md) for the delivery sequence. This page hol
 assets, detailed setup and the implementation evidence, so the main scenario pages remain
 focused on the business process.
 
+The [illustrated runbook](../3.Runbook.md) includes exact field tables, nine real screenshots
+and expected results. The [expandable field sheets](#copyable-workflow-fields) below provide
+all action fields directly, without asking the reader to reconstruct them from a large JSON
+definition. They preserve the existing component behavior and limitations.
+
+## Screenshot provenance
+
+Captured on 23 September 2026 from the existing isolated configuration. No agent prompts,
+workflow executions, saves, publication, skill uploads, permission changes or notifications
+were performed to create these illustrations. Browser/account chrome is excluded; environment
+and site values are masked. Crops remove empty space, not failed steps or error outcomes.
+
+| Image | What it actually shows |
+|---|---|
+| [Active keys](Images/00-active-keys.png) | Existing separate Unique Intake and Unique Invoice indexes in Active state; not a concurrency test. |
+| [Agent Build](Images/01-agent-build.png) | Existing draft agent, two skills and three attached tools; not successful agent execution. |
+| [Upload a skill](Images/02-upload-skill.png) | Upload dialog opened without uploading or replacing a skill. |
+| [Save source](Images/03-save-source.png) | Existing SharePoint Create file settings; site address hidden. |
+| [Reader query](Images/04-reader-query.png) | Existing selected-environment Dataverse query; environment hidden. |
+| [Reader input](Images/05-reader-input.png) | Attached tool's required source-record input. |
+| [Reader outputs](Images/06-reader-outputs.png) | Existing status/source_id/record_json/version contract. |
+| [Generator inputs](Images/07-generator-inputs.png) | Existing record_id/expected_version inputs; permission setting is not an approval decision. |
+| [Financial checks](Images/08-recorded-financial-checks.png) | Outputs of the recorded normal PO component run from 21 September, not a new agent run. |
+
+The pilot resource names in images are intentionally retained; changing the documentation title
+does not rename deployed resources. Screenshots are not instructions to copy the test model or
+broaden tool permissions. The current designer may mark a view dirty merely after opening a
+node; discard that view rather than saving during inspection.
+
 ## Delivery status
 
 **Last recorded runtime evidence: 21 September 2026. Not ready for a dependable end-to-end
@@ -263,3 +292,1491 @@ The existing contract and historical results must not be silently rewritten to m
 - [Dataverse connector](https://learn.microsoft.com/en-us/connectors/commondataserviceforapps/)
 - [Approvals connector](https://learn.microsoft.com/en-us/connectors/approvals/)
 - [Agent governance pattern](../../../02-patterns/Agent-Governance-and-Rollout-Control-Plane/Agent-Governance-and-Rollout-Control-Plane.md)
+
+<!-- BEGIN GENERATED FINANCE FIELD SHEETS -->
+## Copyable workflow fields
+
+These expandable field sheets translate the four existing reconstruction references into
+designer fields. They do not add missing behavior or turn the JSON into an importable solution.
+Build in the order in the [runbook](../3.Runbook.md). Read the branch location and **Run after**
+for every action; canvas proximity alone does not set failure handling.
+
+- Select your connection and environment; replace every `__PLACEHOLDER__` before use.
+- Map the `cr090_` names to your actual column logical names and entity set name.
+- Expression-editor values below omit the JSON definition's leading `@`. Do not paste
+  an expression as literal text or paste the whole definition into a single node.
+- Rename actions before adding expressions that reference them. Check internal names
+  against the definition if the designer normalizes spaces or adds a numeric suffix.
+- For **Select**, `json('[{}]')` means one empty object so the map produces one result.
+  It does not read a table. Output values remain the types returned by each expression.
+- A branch with no actions is deliberately recorded as empty, not an invented error handler.
+  The [delivery limitations](#delivery-status) still apply.
+
+### Intake fields
+
+Source: [Invoice-intake.definition.json](Invoice-intake.definition.json).
+
+#### Trigger inputs
+
+Select **When an agent calls the workflow**; add required Text inputs in this order:
+
+| Display name | Internal key | Description |
+|---|---|---|
+| `messageId` | `text` | Approved received invoice ID. Claims one test record and saves its attachment to the fixed Invoice SharePoint folder. Never starts approval or payment. |
+
+#### Initialize_intake_result
+
+<details>
+<summary>Variable / Initialize variable - open exact fields</summary>
+
+**Location:** `Initialize_intake_result`. Use display name **Initialize intake result**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**Variable name** - Literal / structured value
+
+```text
+intake_result
+```
+
+**Variable type** - Literal / structured value
+
+```text
+Object
+```
+
+**Initial value** - Expression editor
+
+```text
+json('{"record_id":"","source_file_url":"","source_file_id":"","created":false,"status":"capability_disabled","record_state":"not_started","reconciliation":"not_run","error_code":"scope_or_input_not_allowed"}')
+```
+
+</details>
+
+#### Get_email
+
+<details>
+<summary>Connector / Office 365 Outlook / Get email (V2) - open exact fields</summary>
+
+**Location:** `Get_email`. Use display name **Get email**.
+
+**Run after:** `Initialize_intake_result`: Succeeded.
+
+**Native operation:** `GetEmailV2`. Select your approved connection; do not copy a connection ID.
+
+**Include attachments** - Literal / structured value
+
+```text
+true
+```
+
+**Message Id** - Expression editor
+
+```text
+triggerBody()?['text']
+```
+
+**Original Mailbox Address** - Literal / structured value
+
+```text
+__TEST_SHARED_MAILBOX__
+```
+
+**Fetch sensitivity label metadata** - Literal / structured value
+
+```text
+true
+```
+
+**Extract sensitivity label** - Literal / structured value
+
+```text
+true
+```
+
+</details>
+
+#### Select
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Select`. Use display name **Select**.
+
+**Run after:** `Get_email`: Succeeded.
+
+**From** - Expression editor
+
+```text
+if(equals(outputs('Get_email')?['body/hasAttachments'], true), outputs('Get_email')?['body/attachments'], json('[]'))
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**source_id** - Expression editor
+
+```text
+item()?['id']
+```
+
+**name** - Expression editor
+
+```text
+item()?['name']
+```
+
+**status** - Expression editor
+
+```text
+if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), 'ok', 'unsupported_input')
+```
+
+**text** - Expression editor
+
+```text
+if(and(lessOrEquals(length(outputs('Get_email')?['body/attachments']), 5), endsWith(toLower(coalesce(item()?['name'], '')), '.txt'), or(startsWith(toLower(coalesce(item()?['contentType'], '')), 'text/plain'), equals(toLower(coalesce(item()?['contentType'], '')), 'application/octet-stream')), lessOrEquals(coalesce(item()?['size'], 65537), 65536), not(empty(item()?['contentBytes'])), not(equals(item()?['isInline'], true))), base64ToString(item()?['contentBytes']), '')
+```
+
+</details>
+
+#### Allowed_invoice_intake
+
+<details>
+<summary>If/Else - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake`. Use display name **Allowed invoice intake**.
+
+**Run after:** `Select`: Succeeded.
+
+**Condition - left value** - Expression editor
+
+```text
+if(equals(length(coalesce(outputs('Get_email')?['body/attachments'],json('[]'))),1),if(and(contains(json('["__SEED_NORMAL_MESSAGE_ID__","__SEED_MISSING_MESSAGE_ID__","__SEED_NOPO_MESSAGE_ID__","__SEED_CONFLICT_MESSAGE_ID__","__SEED_MALICIOUS_MESSAGE_ID__","__SEED_DUPLICATE_MESSAGE_ID__","__SEED_UNSUPPORTED_MESSAGE_ID__"]'),triggerBody()?['text']),not(empty(triggerBody()?['text'])),lessOrEquals(length(triggerBody()?['text']),287),equals(outputs('Get_email')?['body/id'],triggerBody()?['text']),lessOrEquals(coalesce(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['size'],65537),65536),not(equals(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['isInline'],true)),not(empty(first(coalesce(outputs('Get_email')?['body/attachments'],json('[]')))?['contentBytes']))),'enabled','disabled'),'disabled')
+```
+
+**Condition - operator** - Literal / structured value
+
+```text
+is equal to
+```
+
+**Condition - right value** - Literal / structured value
+
+```text
+enabled
+```
+
+Actions below are in **True / If**. **False / Else is empty in this reference**; the initialized result is returned. This is not proof of comprehensive failure classification.
+
+</details>
+
+#### Claim_intake
+
+<details>
+<summary>Connector / Microsoft Dataverse / Add a new row to selected environment - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Claim_intake`. Use display name **Claim intake**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**Native operation:** `CreateRecordWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**cr090_intakekey** - Expression editor
+
+```text
+concat('ghcp-invoice|',triggerBody()?['text'])
+```
+
+**cr090_reviewstate** - Literal / structured value
+
+```text
+intake_claimed
+```
+
+</details>
+
+#### Save_source
+
+<details>
+<summary>Connector / SharePoint / Create file - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Save_source`. Use display name **Save source**.
+
+**Run after:** `Claim_intake`: Succeeded.
+
+**Native operation:** `CreateFile`. Select your approved connection; do not copy a connection ID.
+
+**Site address** - Literal / structured value
+
+```text
+__INVOICE_SITE_URL__
+```
+
+**Folder path** - Literal / structured value
+
+```text
+/Shared Documents/Incoming
+```
+
+**File name** - Expression editor
+
+```text
+concat(outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid'],if(equals(first(body('Select'))?['status'],'ok'),'.txt','.bin'))
+```
+
+**File content** - Expression editor
+
+```text
+base64ToBinary(first(outputs('Get_email')?['body/attachments'])?['contentBytes'])
+```
+
+</details>
+
+#### Source_snapshot
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Source_snapshot`. Use display name **Source snapshot**.
+
+**Run after:** `Save_source`: Succeeded.
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**schema_version** - Literal / structured value
+
+```text
+1
+```
+
+**approval_state** - Literal / structured value
+
+```text
+not_requested
+```
+
+**record_version** - Expression editor
+
+```text
+int('1')
+```
+
+**record_id** - Expression editor
+
+```text
+outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid']
+```
+
+**source_id** - Expression editor
+
+```text
+outputs('Get_email')?['body/id']
+```
+
+**subject** - Expression editor
+
+```text
+outputs('Get_email')?['body/subject']
+```
+
+**body** - Expression editor
+
+```text
+outputs('Get_email')?['body/body']
+```
+
+**sender** - Expression editor
+
+```text
+outputs('Get_email')?['body/from']
+```
+
+**attachments** - Expression editor
+
+```text
+body('Select')
+```
+
+**source_file_id** - Expression editor
+
+```text
+outputs('Save_source')?['body/Id']
+```
+
+**source_file_path** - Expression editor
+
+```text
+outputs('Save_source')?['body/Path']
+```
+
+</details>
+
+#### Record_saved_source
+
+<details>
+<summary>Connector / Microsoft Dataverse / Update a row in selected environment - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Record_saved_source`. Use display name **Record saved source**.
+
+**Run after:** `Source_snapshot`: Succeeded.
+
+**Native operation:** `UpdateOnlyRecordWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Row ID** - Expression editor
+
+```text
+outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid']
+```
+
+**cr090_reviewstate** - Literal / structured value
+
+```text
+source_saved
+```
+
+**cr090_sourcefileurl** - Expression editor
+
+```text
+concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_source')?['body/Path']),'%2F','/'))
+```
+
+**cr090_reviewpayload** - Expression editor
+
+```text
+string(first(body('Source_snapshot')))
+```
+
+</details>
+
+#### Reconcile_intake
+
+<details>
+<summary>Connector / Microsoft Dataverse / List rows from selected environment - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Reconcile_intake`. Use display name **Reconcile intake**.
+
+**Run after:** `Record_saved_source`: Succeeded, Failed, TimedOut, Skipped.
+
+**Native operation:** `ListRecordsWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Select columns** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_reviewstate,cr090_sourcefileurl,cr090_reviewpayload,versionnumber
+```
+
+**Filter rows** - Expression editor
+
+```text
+concat('cr090_intakekey eq ''ghcp-invoice|',replace(triggerBody()?['text'],'''',''''''),'''')
+```
+
+**Row count** - Literal / structured value
+
+```text
+2
+```
+
+</details>
+
+#### Intake_outcome
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Intake_outcome`. Use display name **Intake outcome**.
+
+**Run after:** `Reconcile_intake`: Succeeded, Failed, TimedOut, Skipped.
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**record_id** - Expression editor
+
+```text
+coalesce(outputs('Claim_intake')?['body/cr090_ghcpinvoicereviewid'],if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_ghcpinvoicereviewid'],''),'')
+```
+
+**source_file_url** - Expression editor
+
+```text
+coalesce(if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_sourcefileurl'],null),if(equals(actions('Save_source')?['status'],'Succeeded'),concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_source')?['body/Path']),'%2F','/')),''),'')
+```
+
+**source_file_id** - Expression editor
+
+```text
+coalesce(outputs('Save_source')?['body/Id'],'')
+```
+
+**created** - Expression editor
+
+```text
+equals(actions('Claim_intake')?['status'],'Succeeded')
+```
+
+**status** - Expression editor
+
+```text
+if(and(equals(actions('Reconcile_intake')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),equals(first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_reviewstate'],'source_saved'),false)),if(equals(actions('Record_saved_source')?['status'],'Succeeded'),if(equals(first(body('Select'))?['status'],'ok'),'ok','unsupported_input'),'duplicate'),if(or(equals(outputs('Claim_intake')?['statusCode'],401),equals(outputs('Claim_intake')?['statusCode'],403)),'denied',if(or(and(equals(actions('Save_source')?['status'],'Failed'),greaterOrEquals(coalesce(outputs('Save_source')?['statusCode'],0),400),less(coalesce(outputs('Save_source')?['statusCode'],0),500)),and(equals(actions('Record_saved_source')?['status'],'Failed'),greaterOrEquals(coalesce(outputs('Record_saved_source')?['statusCode'],0),400),less(coalesce(outputs('Record_saved_source')?['statusCode'],0),500))),'failed','unknown_outcome')))
+```
+
+**error_code** - Expression editor
+
+```text
+concat('claim=',coalesce(actions('Claim_intake')?['status'],'not_run'),';file=',coalesce(actions('Save_source')?['status'],'not_run'),';record=',coalesce(actions('Record_saved_source')?['status'],'not_run'),';reconcile=',coalesce(actions('Reconcile_intake')?['status'],'not_run'))
+```
+
+**record_state** - Expression editor
+
+```text
+coalesce(if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]')))?['cr090_reviewstate'],null),if(equals(actions('Claim_intake')?['status'],'Succeeded'),'intake_claimed','unknown'),'unknown')
+```
+
+**reconciliation** - Expression editor
+
+```text
+if(equals(actions('Reconcile_intake')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Reconcile_intake')?['body/value'],json('[]'))),1),'confirmed','not_reconciled'),'unavailable')
+```
+
+</details>
+
+#### Set_intake_result
+
+<details>
+<summary>Variable / Set variable - open exact fields</summary>
+
+**Location:** `Allowed_invoice_intake > True > Set_intake_result`. Use display name **Set intake result**.
+
+**Run after:** `Intake_outcome`: Succeeded.
+
+**Variable name** - Literal / structured value
+
+```text
+intake_result
+```
+
+**Value** - Expression editor
+
+```text
+first(body('Intake_outcome'))
+```
+
+</details>
+
+#### Respond_to_the_agent
+
+<details>
+<summary>Function / Respond to the agent - open exact fields</summary>
+
+**Location:** `Respond_to_the_agent`. Use display name **Respond to the agent**.
+
+**Run after:** `Allowed_invoice_intake`: Succeeded, Failed, TimedOut, Skipped.
+
+Create Text outputs in the following order. The internal keys are shown for matching expressions.
+
+**Output record_id (internal text)** - Expression editor
+
+```text
+variables('intake_result')?['record_id']
+```
+
+**Output source_id (internal text_1)** - Expression editor
+
+```text
+if(equals(actions('Get_email')?['status'],'Succeeded'),outputs('Get_email')?['body/id'],'')
+```
+
+**Output source_file_url (internal text_2)** - Expression editor
+
+```text
+variables('intake_result')?['source_file_url']
+```
+
+**Output source_file_id (internal text_3)** - Expression editor
+
+```text
+variables('intake_result')?['source_file_id']
+```
+
+**Output created (internal boolean)** - Expression editor
+
+```text
+variables('intake_result')?['created']
+```
+
+**Output status (internal text_4)** - Expression editor
+
+```text
+if(not(equals(actions('Get_email')?['status'],'Succeeded')),if(or(equals(outputs('Get_email')?['statusCode'],401),equals(outputs('Get_email')?['statusCode'],403)),'denied',if(or(equals(actions('Get_email')?['status'],'TimedOut'),equals(outputs('Get_email')?['statusCode'],429),greaterOrEquals(coalesce(outputs('Get_email')?['statusCode'],0),500)),'unavailable','failed')),if(not(equals(actions('Select')?['status'],'Succeeded')),'failed',if(and(equals(variables('intake_result')?['status'],'capability_disabled'),not(equals(actions('Allowed_invoice_intake')?['status'],'Succeeded'))),'unknown_outcome',variables('intake_result')?['status'])))
+```
+
+**Output error_code (internal text_5)** - Expression editor
+
+```text
+variables('intake_result')?['error_code']
+```
+
+**Output record_state (internal text_6)** - Expression editor
+
+```text
+variables('intake_result')?['record_state']
+```
+
+**Output reconciliation (internal text_7)** - Expression editor
+
+```text
+variables('intake_result')?['reconciliation']
+```
+
+</details>
+
+### Reader fields
+
+Source: [Invoice-record-read.definition.json](Invoice-record-read.definition.json).
+
+#### Trigger inputs
+
+Select **When an agent calls the workflow**; add required Text inputs in this order:
+
+| Display name | Internal key | Description |
+|---|---|---|
+| `record_id` | `text` | Existing approved Invoice pilot record ID. Reads its saved source snapshot and state only; never ingests mail, creates files, updates rows or starts approval. This is a stored snapshot, not a fresh mailbox read. |
+
+#### Read_approved_record
+
+<details>
+<summary>Connector / Microsoft Dataverse / List rows from selected environment - open exact fields</summary>
+
+**Location:** `Read_approved_record`. Use display name **Read approved record**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**Native operation:** `ListRecordsWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Select columns** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_sourcefileurl,cr090_packagefileurl,cr090_reviewpayload,versionnumber
+```
+
+**Filter rows** - Expression editor
+
+```text
+concat('cr090_ghcpinvoicereviewid eq ',if(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__'),triggerBody()?['text'],'__DENIED_ROW_ID__'))
+```
+
+**Row count** - Literal / structured value
+
+```text
+2
+```
+
+</details>
+
+#### Respond_to_the_agent
+
+<details>
+<summary>Function / Respond to the agent - open exact fields</summary>
+
+**Location:** `Respond_to_the_agent`. Use display name **Respond to the agent**.
+
+**Run after:** `Read_approved_record`: Succeeded, Failed, TimedOut, Skipped.
+
+Create Text outputs in the following order. The internal keys are shown for matching expressions.
+
+**Output status (internal text)** - Expression editor
+
+```text
+if(not(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__')),'denied',if(equals(actions('Read_approved_record')?['status'],'Succeeded'),if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1),'ok',if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),0),'not_found','failed')),if(or(equals(outputs('Read_approved_record')?['statusCode'],401),equals(outputs('Read_approved_record')?['statusCode'],403)),'denied',if(or(equals(actions('Read_approved_record')?['status'],'TimedOut'),equals(outputs('Read_approved_record')?['statusCode'],429),greaterOrEquals(coalesce(outputs('Read_approved_record')?['statusCode'],0),500)),'unavailable','failed'))))
+```
+
+**Output source_id (internal text_1)** - Expression editor
+
+```text
+if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),first(outputs('Read_approved_record')?['body/value'])?['cr090_ghcpinvoicereviewid'],'')
+```
+
+**Output record_json (internal text_2)** - Expression editor
+
+```text
+if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),string(first(outputs('Read_approved_record')?['body/value'])),'')
+```
+
+**Output version (internal text_3)** - Expression editor
+
+```text
+if(and(equals(actions('Read_approved_record')?['status'],'Succeeded'),equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),string(first(outputs('Read_approved_record')?['body/value'])?['versionnumber']),'')
+```
+
+</details>
+
+### Reference fields
+
+Source: [Finance-reference.definition.json](Finance-reference.definition.json).
+
+#### Trigger inputs
+
+Select **When an agent calls the workflow**; add required Text inputs in this order:
+
+| Display name | Internal key | Description |
+|---|---|---|
+| `reference_id` | `text` | Exact synthetic finance reference ID ref-vendors, ref-po-7788, ref-receipt-7788, ref-gl-6100, ref-cc-204 or ref-nopo-policy; bundle-po returns vendor/PO/receipt/GL/CC entries, bundle-nopo returns vendor/no-PO policy. Not production ERP or policy. Read-only; unknown ID returns not_found. |
+
+#### Respond_to_the_agent
+
+<details>
+<summary>Function / Respond to the agent - open exact fields</summary>
+
+**Location:** `Respond_to_the_agent`. Use display name **Respond to the agent**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+Create Text outputs in the following order. The internal keys are shown for matching expressions.
+
+**Output status (internal text)** - Expression editor
+
+```text
+if(contains(createArray('bundle-po','bundle-nopo','ref-vendors','ref-po-7788','ref-receipt-7788','ref-gl-6100','ref-cc-204','ref-nopo-policy'),toLower(trim(coalesce(triggerBody()?['text'],'')))),'ok','not_found')
+```
+
+**Output source_id (internal text_1)** - Expression editor
+
+```text
+toLower(trim(coalesce(triggerBody()?['text'],'')))
+```
+
+**Output text (internal text_2)** - Expression editor
+
+```text
+if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-nopo-policy'),'[{"source_id":"ref-nopo-policy","text":"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review."}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-cc-204'),'[{"source_id":"ref-cc-204","text":"Cost centre CC-204 approved for synthetic finance operations"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-gl-6100'),'[{"source_id":"ref-gl-6100","text":"GL 6100 approved for synthetic services expense"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-receipt-7788'),'[{"source_id":"ref-receipt-7788","text":"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-po-7788'),'[{"source_id":"ref-po-7788","text":"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD"}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'ref-vendors'),'[{"source_id":"ref-vendors","text":"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204."}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'bundle-nopo'),'[{"source_id":"ref-vendors","text":"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204."},{"source_id":"ref-nopo-policy","text":"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review."}]',if(equals(toLower(trim(coalesce(triggerBody()?['text'],''))),'bundle-po'),'[{"source_id":"ref-vendors","text":"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204."},{"source_id":"ref-po-7788","text":"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD"},{"source_id":"ref-receipt-7788","text":"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2"},{"source_id":"ref-gl-6100","text":"GL 6100 approved for synthetic services expense"},{"source_id":"ref-cc-204","text":"Cost centre CC-204 approved for synthetic finance operations"}]','[]'))))))))
+```
+
+**Output version (internal text_3)** - Literal / structured value
+
+```text
+synthetic-finance-catalogue-2026-09-21; not production ERP/policy
+```
+
+</details>
+
+### Generator fields
+
+Source: [Generate-review-package.definition.json](Generate-review-package.definition.json).
+
+#### Trigger inputs
+
+Select **When an agent calls the workflow**; add required Text inputs in this order:
+
+| Display name | Internal key | Description |
+|---|---|---|
+| `record_id` | `text` | Approved Invoice intake record ID. Explicit composite action: deterministic validation, unique package claim, fixed SharePoint review file and package-state row update. No approval start/payment. |
+| `expected_version` | `text_1` | Exact Dataverse version returned by the latest approved record read. A mismatch stops generation for renewed review. |
+
+#### Initialize_package_result
+
+<details>
+<summary>Variable / Initialize variable - open exact fields</summary>
+
+**Location:** `Initialize_package_result`. Use display name **Initialize package result**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**Variable name** - Literal / structured value
+
+```text
+package_result
+```
+
+**Variable type** - Literal / structured value
+
+```text
+Object
+```
+
+**Initial value** - Expression editor
+
+```text
+json('{"status":"needs_review","record_id":"","package_file_url":"","reason":"Source version, evidence or supported scope requires review","approval_state":"not_requested"}')
+```
+
+</details>
+
+#### Read_approved_record
+
+<details>
+<summary>Connector / Microsoft Dataverse / List rows from selected environment - open exact fields</summary>
+
+**Location:** `Read_approved_record`. Use display name **Read approved record**.
+
+**Run after:** `Initialize_package_result`: Succeeded.
+
+**Native operation:** `ListRecordsWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Select columns** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_sourcefileurl,cr090_packagefileurl,cr090_reviewpayload,versionnumber
+```
+
+**Filter rows** - Expression editor
+
+```text
+concat('cr090_ghcpinvoicereviewid eq ',if(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__'),triggerBody()?['text'],'__DENIED_ROW_ID__'))
+```
+
+**Row count** - Literal / structured value
+
+```text
+2
+```
+
+</details>
+
+#### Source_current
+
+<details>
+<summary>If/Else - open exact fields</summary>
+
+**Location:** `Source_current`. Use display name **Source current**.
+
+**Run after:** `Read_approved_record`: Succeeded.
+
+**Condition - left value** - Expression editor
+
+```text
+if(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1),if(and(equals(string(first(outputs('Read_approved_record')?['body/value'])?['versionnumber']),triggerBody()?['text_1']),equals(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewstate'],'source_saved'),not(empty(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewpayload']))),'yes','no'),'no')
+```
+
+**Condition - operator** - Literal / structured value
+
+```text
+is equal to
+```
+
+**Condition - right value** - Literal / structured value
+
+```text
+yes
+```
+
+Actions below are in **True / If**. **False / Else is empty in this reference**; the initialized result is returned. This is not proof of comprehensive failure classification.
+
+</details>
+
+#### Stored_snapshot
+
+<details>
+<summary>Function / Compose - open exact fields</summary>
+
+**Location:** `Source_current > True > Stored_snapshot`. Use display name **Stored snapshot**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**Inputs** - Expression editor
+
+```text
+json(first(outputs('Read_approved_record')?['body/value'])?['cr090_reviewpayload'])
+```
+
+</details>
+
+#### Text_source_supported
+
+<details>
+<summary>If/Else - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported`. Use display name **Text source supported**.
+
+**Run after:** `Stored_snapshot`: Succeeded.
+
+**Condition - left value** - Expression editor
+
+```text
+if(equals(length(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]'))),1),if(and(equals(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['status'],'ok'),not(empty(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['text'])),lessOrEquals(length(first(coalesce(outputs('Stored_snapshot')?['attachments'],json('[]')))?['text']),65536)),'yes','no'),'no')
+```
+
+**Condition - operator** - Literal / structured value
+
+```text
+is equal to
+```
+
+**Condition - right value** - Literal / structured value
+
+```text
+yes
+```
+
+Actions below are in **True / If**. **False / Else is empty in this reference**; the initialized result is returned. This is not proof of comprehensive failure classification.
+
+</details>
+
+#### Invoice_fields
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Invoice_fields`. Use display name **Invoice fields**.
+
+**Run after:** first action in this branch (no explicit predecessor in the reference).
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**supplier** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Supplier: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Supplier: '))),decodeUriComponent('%0A')))),'')
+```
+
+**invoice_number** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Number: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Number: '))),decodeUriComponent('%0A')))),'')
+```
+
+**invoice_date** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Date: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Invoice Date: '))),decodeUriComponent('%0A')))),'')
+```
+
+**due_date** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Due Date: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Due Date: '))),decodeUriComponent('%0A')))),'')
+```
+
+**po** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'PO: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'PO: '))),decodeUriComponent('%0A')))),'')
+```
+
+**line** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Line 1: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Line 1: '))),decodeUriComponent('%0A')))),'')
+```
+
+**services** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Services: '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Services: '))),decodeUriComponent('%0A')))),'')
+```
+
+**subtotal_text** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Subtotal AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Subtotal AUD '))),decodeUriComponent('%0A')))),'')
+```
+
+**tax_text** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Tax AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Tax AUD '))),decodeUriComponent('%0A')))),'')
+```
+
+**total_text** - Expression editor
+
+```text
+if(equals(length(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Total AUD '))),2),trim(first(split(last(split(concat(decodeUriComponent('%0A'),replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')),concat(decodeUriComponent('%0A'),'Total AUD '))),decodeUriComponent('%0A')))),'')
+```
+
+**attachment_source_id** - Expression editor
+
+```text
+first(outputs('Stored_snapshot')?['attachments'])?['source_id']
+```
+
+**source_text** - Expression editor
+
+```text
+replace(first(outputs('Stored_snapshot')?['attachments'])?['text'],decodeUriComponent('%0D'),'')
+```
+
+</details>
+
+#### Financial_checks
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Financial_checks`. Use display name **Financial checks**.
+
+**Run after:** `Invoice_fields`: Succeeded.
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**vendor_id** - Expression editor
+
+```text
+if(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),'VEND-ACME-SYN',if(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),'VEND-NOPO-SYN',''))
+```
+
+**legal_entity** - Literal / structured value
+
+```text
+SYN-ENTITY
+```
+
+**currency** - Literal / structured value
+
+```text
+AUD
+```
+
+**path** - Expression editor
+
+```text
+if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'po',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'nopo','exception'))
+```
+
+**subtotal_cents** - Expression editor
+
+```text
+if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1))
+```
+
+**tax_cents** - Expression editor
+
+```text
+if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1)
+```
+
+**total_cents** - Expression editor
+
+```text
+if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1)
+```
+
+**identity_complete** - Expression editor
+
+```text
+and(not(empty(if(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),'VEND-ACME-SYN',if(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),'VEND-NOPO-SYN','')))),not(empty(first(body('Invoice_fields'))?['invoice_number'])),lessOrEquals(length(first(body('Invoice_fields'))?['invoice_number']),64),not(empty(first(body('Invoice_fields'))?['invoice_date'])))
+```
+
+**terms_supported** - Expression editor
+
+```text
+or(and(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),not(empty(first(body('Invoice_fields'))?['due_date']))),and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')))
+```
+
+**source_flags** - Expression editor
+
+```text
+or(contains(toLower(first(body('Invoice_fields'))?['source_text']),'instruction to agent'),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'instruction to agent'),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'total aud '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'total aud ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('total aud ',first(body('Invoice_fields'))?['total_text']))))),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'gl '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'gl ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('gl ',if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'6100','6200')))))),and(contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'cost centre '),not(and(equals(length(split(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),'cost centre ')),2),contains(toLower(coalesce(outputs('Stored_snapshot')?['body'],'')),concat('cost centre ',if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'cc-204','cc-310')))))))
+```
+
+**arithmetic_matches** - Expression editor
+
+```text
+and(greaterOrEquals(if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1)),0),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1),0),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),0),equals(add(if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),10000,if(and(not(empty(first(body('Invoice_fields'))?['subtotal_text'])),equals(length(split(first(body('Invoice_fields'))?['subtotal_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['subtotal_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'-')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],'+')),not(contains(first(body('Invoice_fields'))?['subtotal_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['subtotal_text']),'e'))),int(replace(first(body('Invoice_fields'))?['subtotal_text'],'.','')),-1)),if(and(not(empty(first(body('Invoice_fields'))?['tax_text'])),equals(length(split(first(body('Invoice_fields'))?['tax_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['tax_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['tax_text'],'-')),not(contains(first(body('Invoice_fields'))?['tax_text'],'+')),not(contains(first(body('Invoice_fields'))?['tax_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['tax_text']),'e'))),int(replace(first(body('Invoice_fields'))?['tax_text'],'.','')),-1)),if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1)))
+```
+
+**policy_limit** - Expression editor
+
+```text
+or(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),and(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),lessOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),50000),greaterOrEquals(if(and(not(empty(first(body('Invoice_fields'))?['total_text'])),equals(length(split(first(body('Invoice_fields'))?['total_text'],'.')),2),equals(length(last(split(first(body('Invoice_fields'))?['total_text'],'.'))),2),not(contains(first(body('Invoice_fields'))?['total_text'],'-')),not(contains(first(body('Invoice_fields'))?['total_text'],'+')),not(contains(first(body('Invoice_fields'))?['total_text'],' ')),not(contains(toLower(first(body('Invoice_fields'))?['total_text']),'e'))),int(replace(first(body('Invoice_fields'))?['total_text'],'.','')),-1),0)))
+```
+
+**gl** - Expression editor
+
+```text
+if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'6100',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'6200',''))
+```
+
+**cost_centre** - Expression editor
+
+```text
+if(and(equals(first(body('Invoice_fields'))?['supplier'],'ACME Supplies Synthetic Ltd'),equals(first(body('Invoice_fields'))?['po'],'PO-7788-SYN'),equals(first(body('Invoice_fields'))?['line'],'Synthetic support hours Quantity 2 Unit Price 50.00 Line Total 100.00')),'CC-204',if(and(equals(first(body('Invoice_fields'))?['supplier'],'NoPO Advisory Synthetic Pty Ltd'),empty(first(body('Invoice_fields'))?['po']),equals(first(body('Invoice_fields'))?['services'],'Advisory hours')),'CC-310',''))
+```
+
+</details>
+
+#### Review_form
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Review_form`. Use display name **Review form**.
+
+**Run after:** `Financial_checks`: Succeeded.
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**template_version** - Literal / structured value
+
+```text
+synthetic-finance-review-v1
+```
+
+**document_type** - Expression editor
+
+```text
+if(and(equals(first(body('Financial_checks'))?['identity_complete'],true),equals(first(body('Financial_checks'))?['terms_supported'],true),equals(first(body('Financial_checks'))?['source_flags'],false),equals(first(body('Financial_checks'))?['arithmetic_matches'],true),equals(first(body('Financial_checks'))?['policy_limit'],true)),'payment_request_review','invoice_exception_review')
+```
+
+**status** - Expression editor
+
+```text
+if(and(equals(first(body('Financial_checks'))?['identity_complete'],true),equals(first(body('Financial_checks'))?['terms_supported'],true),equals(first(body('Financial_checks'))?['source_flags'],false),equals(first(body('Financial_checks'))?['arithmetic_matches'],true),equals(first(body('Financial_checks'))?['policy_limit'],true)),'ok','needs_review')
+```
+
+**source_record_id** - Expression editor
+
+```text
+triggerBody()?['text']
+```
+
+**source_version** - Expression editor
+
+```text
+triggerBody()?['text_1']
+```
+
+**invoice_fields** - Expression editor
+
+```text
+first(body('Invoice_fields'))
+```
+
+**deterministic_checks** - Expression editor
+
+```text
+first(body('Financial_checks'))
+```
+
+**approved_references** - Expression editor
+
+```text
+json('[{"source_id":"ref-vendors","text":"ACME Supplies Synthetic Ltd maps to approved vendor VEND-ACME-SYN. NoPO Advisory Synthetic Pty Ltd maps to approved vendor VEND-NOPO-SYN. Legal entity SYN-ENTITY uses AUD. PO-7788-SYN uses GL 6100 and cost centre CC-204."},{"source_id":"ref-po-7788","text":"PO PO-7788-SYN vendor VEND-ACME-SYN approved line Synthetic support hours quantity 2 unit price 50.00 line total 100.00 currency AUD"},{"source_id":"ref-receipt-7788","text":"Receipt RCPT-7788-1 for PO PO-7788-SYN line 1 received quantity 2"},{"source_id":"ref-gl-6100","text":"GL 6100 approved for synthetic services expense"},{"source_id":"ref-cc-204","text":"Cost centre CC-204 approved for synthetic finance operations"},{"source_id":"ref-nopo-policy","text":"NOPO-PROF-SERVICES-LOW approved for vendor VEND-NOPO-SYN, GL 6200, cost centre CC-310, currency AUD; advisory invoices up to AUD 500.00 require no PO or due date but always require finance review."}]')
+```
+
+**source_file_url** - Expression editor
+
+```text
+first(outputs('Read_approved_record')?['body/value'])?['cr090_sourcefileurl']
+```
+
+**requires_human_review** - Expression editor
+
+```text
+true
+```
+
+**approval_state** - Literal / structured value
+
+```text
+not_requested
+```
+
+**limitations** - Literal / structured value
+
+```text
+Approved synthetic catalogue and English AUD text format only. Integer-cent checks use the declared source amounts; no tax-law, OCR, ERP, approval or payment validation. Failed or missing fields remain exceptions. Negative numeric sentinel -1 means missing/invalid, never a payable amount.
+```
+
+</details>
+
+#### Claim_package
+
+<details>
+<summary>Connector / Microsoft Dataverse / Add a new row to selected environment - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Claim_package`. Use display name **Claim package**.
+
+**Run after:** `Review_form`: Succeeded.
+
+**Native operation:** `CreateRecordWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**cr090_intakekey** - Expression editor
+
+```text
+concat('package|',triggerBody()?['text'])
+```
+
+**cr090_invoicekey** - Expression editor
+
+```text
+if(equals(first(body('Financial_checks'))?['identity_complete'],true),concat('SYN-ENTITY|',first(body('Financial_checks'))?['vendor_id'],'|',toUpper(trim(first(body('Invoice_fields'))?['invoice_number']))),null)
+```
+
+**cr090_reviewstate** - Literal / structured value
+
+```text
+package_claimed
+```
+
+**cr090_reviewpayload** - Expression editor
+
+```text
+string(first(body('Review_form')))
+```
+
+</details>
+
+#### Save_package
+
+<details>
+<summary>Connector / SharePoint / Create file - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Save_package`. Use display name **Save package**.
+
+**Run after:** `Claim_package`: Succeeded.
+
+**Native operation:** `CreateFile`. Select your approved connection; do not copy a connection ID.
+
+**Site address** - Literal / structured value
+
+```text
+__INVOICE_SITE_URL__
+```
+
+**Folder path** - Literal / structured value
+
+```text
+/Shared Documents/ReviewPackages
+```
+
+**File name** - Expression editor
+
+```text
+concat(outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid'],'.json')
+```
+
+**File content** - Expression editor
+
+```text
+string(first(body('Review_form')))
+```
+
+</details>
+
+#### Record_package
+
+<details>
+<summary>Connector / Microsoft Dataverse / Update a row in selected environment - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Record_package`. Use display name **Record package**.
+
+**Run after:** `Save_package`: Succeeded.
+
+**Native operation:** `UpdateOnlyRecordWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Row ID** - Expression editor
+
+```text
+outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid']
+```
+
+**cr090_reviewstate** - Literal / structured value
+
+```text
+package_ready
+```
+
+**cr090_packagefileurl** - Expression editor
+
+```text
+concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_package')?['body/Path']),'%2F','/'))
+```
+
+</details>
+
+#### Reconcile_package
+
+<details>
+<summary>Connector / Microsoft Dataverse / List rows from selected environment - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Reconcile_package`. Use display name **Reconcile package**.
+
+**Run after:** `Record_package`: Succeeded, Failed, TimedOut, Skipped.
+
+**Native operation:** `ListRecordsWithOrganization`. Select your approved connection; do not copy a connection ID.
+
+**Environment** - Literal / structured value
+
+```text
+__DATAVERSE_ORGANIZATION_URL__
+```
+
+**Table name** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviews
+```
+
+**Select columns** - Literal / structured value
+
+```text
+cr090_ghcpinvoicereviewid,cr090_intakekey,cr090_invoicekey,cr090_reviewstate,cr090_packagefileurl,cr090_reviewpayload,versionnumber
+```
+
+**Filter rows** - Expression editor
+
+```text
+concat('(cr090_intakekey eq ''package|',replace(triggerBody()?['text'],'''',''''''),'''',if(equals(first(body('Financial_checks'))?['identity_complete'],true),concat(' or cr090_invoicekey eq ''',replace(concat('SYN-ENTITY|',first(body('Financial_checks'))?['vendor_id'],'|',toUpper(trim(first(body('Invoice_fields'))?['invoice_number']))),'''',''''''),''''),''),') and startswith(cr090_intakekey,''package|'')')
+```
+
+**Row count** - Literal / structured value
+
+```text
+2
+```
+
+</details>
+
+#### Package_outcome
+
+<details>
+<summary>Function / Select - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Package_outcome`. Use display name **Package outcome**.
+
+**Run after:** `Reconcile_package`: Succeeded, Failed, TimedOut, Skipped.
+
+**From** - Expression editor
+
+```text
+json('[{}]')
+```
+
+**Map:** add each key exactly as shown, with the corresponding value or expression.
+
+**status** - Expression editor
+
+```text
+if(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),and(equals(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewstate'],'package_ready'),not(empty(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl']))),false),if(equals(actions('Record_package')?['status'],'Succeeded'),first(body('Review_form'))?['status'],'duplicate'),if(or(equals(outputs('Claim_package')?['statusCode'],401),equals(outputs('Claim_package')?['statusCode'],403)),'denied','unknown_outcome'))
+```
+
+**record_id** - Expression editor
+
+```text
+coalesce(outputs('Claim_package')?['body/cr090_ghcpinvoicereviewid'],if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_ghcpinvoicereviewid'],''),'')
+```
+
+**package_file_url** - Expression editor
+
+```text
+coalesce(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl'],null),if(equals(actions('Save_package')?['status'],'Succeeded'),concat('__INVOICE_SITE_URL__',replace(uriComponent(outputs('Save_package')?['body/Path']),'%2F','/')),''),'')
+```
+
+**package_file_id** - Expression editor
+
+```text
+coalesce(outputs('Save_package')?['body/Id'],'')
+```
+
+**record_version** - Expression editor
+
+```text
+if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),string(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['versionnumber']),'')
+```
+
+**created** - Expression editor
+
+```text
+equals(actions('Claim_package')?['status'],'Succeeded')
+```
+
+**approval_state** - Literal / structured value
+
+```text
+not_requested
+```
+
+**requires_human_review** - Expression editor
+
+```text
+true
+```
+
+**package_json** - Expression editor
+
+```text
+if(if(equals(length(coalesce(outputs('Reconcile_package')?['body/value'],json('[]'))),1),and(equals(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewstate'],'package_ready'),not(empty(first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_packagefileurl']))),false),first(coalesce(outputs('Reconcile_package')?['body/value'],json('[]')))?['cr090_reviewpayload'],'')
+```
+
+**reason** - Expression editor
+
+```text
+concat('claim=',actions('Claim_package')?['status'],';file=',actions('Save_package')?['status'],';record=',actions('Record_package')?['status'],';reconcile=',actions('Reconcile_package')?['status'])
+```
+
+</details>
+
+#### Set_package_result
+
+<details>
+<summary>Variable / Set variable - open exact fields</summary>
+
+**Location:** `Source_current > True > Text_source_supported > True > Set_package_result`. Use display name **Set package result**.
+
+**Run after:** `Package_outcome`: Succeeded.
+
+**Variable name** - Literal / structured value
+
+```text
+package_result
+```
+
+**Value** - Expression editor
+
+```text
+first(body('Package_outcome'))
+```
+
+</details>
+
+#### Respond_to_the_agent
+
+<details>
+<summary>Function / Respond to the agent - open exact fields</summary>
+
+**Location:** `Respond_to_the_agent`. Use display name **Respond to the agent**.
+
+**Run after:** `Source_current`: Succeeded, Failed, TimedOut, Skipped.
+
+Create Text outputs in the following order. The internal keys are shown for matching expressions.
+
+**Output status (internal text)** - Expression editor
+
+```text
+if(not(equals(triggerBody()?['text'],'__NORMAL_SOURCE_RECORD_ID__')),'denied',if(not(equals(actions('Read_approved_record')?['status'],'Succeeded')),if(or(equals(outputs('Read_approved_record')?['statusCode'],401),equals(outputs('Read_approved_record')?['statusCode'],403)),'denied','unavailable'),if(not(equals(length(coalesce(outputs('Read_approved_record')?['body/value'],json('[]'))),1)),'needs_review',if(and(not(equals(actions('Source_current')?['status'],'Succeeded')),equals(variables('package_result')?['status'],'needs_review')),'unknown_outcome',variables('package_result')?['status']))))
+```
+
+**Output record_id (internal text_1)** - Expression editor
+
+```text
+coalesce(variables('package_result')?['record_id'],'')
+```
+
+**Output result_json (internal text_2)** - Expression editor
+
+```text
+string(variables('package_result'))
+```
+
+**Output version (internal text_3)** - Expression editor
+
+```text
+coalesce(variables('package_result')?['record_version'],'')
+```
+
+</details>
+
+<!-- END GENERATED FINANCE FIELD SHEETS -->
