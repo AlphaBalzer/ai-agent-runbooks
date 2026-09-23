@@ -191,7 +191,7 @@ results and limitations before building or presenting a live demonstration.
 | Scenario | Scope | Status |
 |---|---|---|
 | [Email & Shared Mailbox Triage Agent (GHCP)](./Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md) | Mailbox triage with approved-source investigation, evidence-backed responses and controlled workflow handoff | Scenario and delivery guide; [assessment demonstrated, action integration outstanding](./Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#delivery-status) |
-| [Finance Document Processing and Approval Agent (GHCP)](./Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md) | Invoice evidence and controlled review-package creation; no approval notifications, posting or payment | Normal workflow components demonstrated; dependable end-to-end agent execution blocked in Preview |
+| [Autonomous Invoice Orchestration Agent (GHCP)](./Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md) | Original invoice intake, extraction, payment form and human-approval process with source-backed investigation; no posting or payment | [Components demonstrated; end-to-end agent and approval integration outstanding](./Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md#delivery-status) |
 
 ## 🔗 Quick Links
 

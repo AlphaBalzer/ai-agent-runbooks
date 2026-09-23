@@ -64,7 +64,7 @@ Invoice's workflow components have been demonstrated, but reliable end-to-end ag
 remains blocked in Preview.
 
 - [Email & Shared Mailbox Triage Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): evidence-based investigation before routing and response decisions. See [delivery status](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#delivery-status) for supplied assessment components and remaining integrations.
-- [Finance Document Processing and Approval Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): invoice evidence and bounded review-package workflows; approval notifications, posting and payment remain off.
+- [Autonomous Invoice Orchestration Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): the original invoice intake, extraction, payment form and human-approval process with source-backed investigation. See [delivery status](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md#delivery-status) for demonstrated components and the outstanding agent/approval integration; posting and payment are excluded.
 - [Shared Inbox trainer walkthrough](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#trainer-walkthrough), [two-scenario trainer quickstart](./TRAINING-QUICKSTART.txt) and [Invoice Preview issue](./PREVIEW-ISSUE-REPRO.txt).
 
 **Need implementation patterns?** Check out [02-patterns/](./02-patterns/) for proven technical approaches including Copilot Studio orchestration, RAG patterns, and multi-agent design.

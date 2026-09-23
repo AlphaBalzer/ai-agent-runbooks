@@ -1,11 +1,12 @@
-# Capability Matrix
+# Capability Matrix - Autonomous Invoice Orchestration Agent (GHCP)
 
 ## Status and controls
 
 Normal intake/package components, replay and version gates demonstrated.
 Agent snapshot review passed once after corrections; subsequent runs claimed
 tools unavailable. End-to-end readiness is blocked. Imported skills alone
-do not prove execution.
+do not prove execution. See [delivery status](README.md#delivery-status) for the
+recorded scope and remaining work.
 
 Require approved test resources, capacity, fixed mailbox/library/table scope and
 authenticated caller authorization **before** reading/saving. Email is not
@@ -13,6 +14,12 @@ authority. All packages need human review. No generic CRUD/HTTP, payment, postin
 bank action or unapproved notification is exposed.
 
 ## Included skill capabilities
+
+The table describes the logical skill contracts. In the supplied snapshot-based build,
+`ReadInvoiceMessage` reads the stored message/attachment payload. No separate
+`ReadInvoiceAttachmentText` or `ReadInvoiceStatus` tool is attached; the generator
+returns its reconciled package result. Do not claim these unconfigured calls occurred.
+See [current workflow bindings](README.md#current-workflow-bindings).
 
 | Capability ID / file | Tool set | Inputs -> outputs; dependencies |
 |---|---|---|
@@ -36,6 +43,11 @@ Disabling does not cancel accepted backend work.
 
 ## Supporting workflow operations
 
+The mappings below describe implementation choices for the complete scenario, not a
+list of native GHCP tools or supplied exports. The recorded build uses the fixed
+selected-environment Dataverse operations in [workflow setup](README.md#workflow-setup)
+and a fictional reference catalogue rather than live finance reference tables.
+
 | Operation and in/out | Actual implementation | Access, gate, failures and evidence |
 |---|---|---|
 | Read selected invoice -> body/attachment IDs | Outlook `GetEmailV2`; `ReadInvoiceMessage` stays read-only | Delegated shared-mailbox rights, not service-principal Outlook auth; deny before content; trace actual item/result |
@@ -51,6 +63,8 @@ Preserve `denied`, `unavailable`, `unsupported_input`, `failed`, `duplicate`,
 return `ok` plus `approved`/`rejected`; neither executes payment. Observe effects
 through agent trace and approved flow history, not a new audit platform.
 
-See [architecture](../2.Architecture.md) for official references, version/duplicate
-rules and reused patterns. No directory-profile connector is needed; authenticated
-transport and explicit execution identity suffice.
+See [architecture](../2.Architecture.md) for the full process and
+[workflow controls](README.md#workflow-controls) for version, duplicate and approval
+rules. [Technical references](README.md#technical-references) link the official
+documentation. No directory-profile connector is needed for the current read/package
+path; any later approver-resolution integration needs its own agreed authority rules.
