@@ -1,6 +1,13 @@
 GHCP PREVIEW CONFIGURATION MISMATCH: REVIEWABLE REPRODUCTION
 21 September 2026 | Not submitted to any recipient
 
+HISTORICAL NOTE (23 September)
+The original observations below are preserved. Later published-agent calls through
+the native workflow Agent node successfully reached the Invoice tools and produced
+an HTML form from a text fixture. This does not prove the old unpublished Preview
+issue is fixed, nor that the proposed simplified PDF path is complete.
+Do not run this reproduction as a prerequisite for the main training guide.
+
 EXPECTED
 An unpublished GHCP agent's next Preview turn uses saved instructions and attached
 workflows. Microsoft documents this behavior, including structural changes:

@@ -65,7 +65,7 @@ being simplified back to the original PDF process; PDF-to-approval completion re
 
 - [Email & Shared Mailbox Triage Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): evidence-based investigation before routing and response decisions. See [delivery status](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#delivery-status) for supplied assessment components and remaining integrations.
 - [Autonomous Invoice Orchestration Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): the original PDF invoice process with a small GHCP review step. [Delivery status](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md#delivery-status) separates the proposed simplified build from the earlier text pilot; posting and payment are excluded.
-- [Shared Inbox trainer walkthrough](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#trainer-walkthrough), [two-scenario trainer quickstart](./TRAINING-QUICKSTART.txt) and [Invoice Preview issue](./PREVIEW-ISSUE-REPRO.txt).
+- [Shared Inbox trainer walkthrough](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#trainer-walkthrough), [two-scenario trainer quickstart](./TRAINING-QUICKSTART.txt) and [Finance build resources](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md). Earlier Invoice test references are in [Archive](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/Archive/README.txt), not the default build path.
 
 **Need implementation patterns?** Check out [02-patterns/](./02-patterns/) for proven technical approaches including Copilot Studio orchestration, RAG patterns, and multi-agent design.
 

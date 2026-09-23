@@ -1,5 +1,6 @@
 GHCP SCENARIOS: TRAINER QUICKSTART
-21 September 2026 | Review handoff, not release sign-off
+Finance guidance updated 23 September 2026; Shared Inbox notes below are the 21 September snapshot.
+Training guidance, not release sign-off.
 
 THE ONE-SENTENCE EXPLANATION
 The agent investigates and explains evidence; workflows enforce fixed actions;
@@ -8,10 +9,10 @@ a person retains authority. A review package is not an approval or a payment.
 WHAT YOU CAN TEACH NOW
 Shared Inbox: a bounded connected demonstration, with recorded normal,
 conflicting, malicious, unsupported and controlled-failure cases.
-Invoice: working intake and normal review-package workflow components, with
-duplicate and source-version safeguards. A corrected connected agent read/
-reference review passed, but Preview does not reliably pick up saved tools.
-Do not advertise Invoice as a reliable live end-to-end agent demonstration yet.
+Invoice: teach the original PDF process with one small GHCP review skill.
+Prepare the original supporting flows first; show agent creation, instructions,
+one skill upload and tool connections live. This is a prepared-environment exercise,
+not a full blank-screen deployment. The simplified PDF path is not yet demonstrated.
 
 20-MINUTE SESSION
 0-3 minutes: Explain scenario versus skill versus technical pattern.
@@ -24,15 +25,15 @@ Do not advertise Invoice as a reliable live end-to-end agent demonstration yet.
   Show the source read, reference lookup, exact citations and human-review flag.
   Show the recorded conflicting-attachment example.
   Point out that no message is sent, moved, deleted or marked by the agent.
-10-17 minutes: Invoice, clearly labelled COMPONENT demonstration.
-  Open the existing normal intake run, its saved source and transaction state.
-  Open the normal Generate Review Package run and resulting review JSON file.
-  Show integer-cent arithmetic, approved fictional references and source version.
-  Show the recorded replay: same package, duplicate, no second file.
-  Show the recorded wrong-version run: needs_review before the write.
-  Explain the known Preview issue rather than repeatedly retrying in class.
+10-17 minutes: Invoice, clearly labelled BUILD TARGET until rehearsed.
+  Explain: PDF arrives, save, extract, create payment request, approve, notify.
+  Show the original supporting-flow sequence and where the GHCP review belongs.
+  Open the new Agent-instructions.txt and Skills/invoice-review/SKILL.md.
+  The skill reviews extraction/reference results; it introduces no extra service.
+  If showing the existing text-to-HTML recording, label it as the earlier pilot,
+  not proof of the PDF-to-approval path. Do not rebuild archived JSON on stage.
 17-20 minutes: Explain boundaries and questions.
-  All packages require a person. Approval notifications are off. No payments,
+  All packages require a person. Invoice approval notifications are off. No payments,
   posting, bank changes, production data or hidden generic write tools.
 
 SIMPLE OPERATOR ROUTINE
@@ -52,20 +53,23 @@ READ THESE FILES
 Shared Inbox: 01-scenarios\Email-and-Mailbox-Triage-Agent-GHCP\3.Runbook.md
 Evidence: its 0.Resources\Actual-test-record.json
 Invoice: 01-scenarios\Autonomous-Invoice-Orchestration-Agent-GHCP\3.Runbook.md
-Evidence: its 0.Resources\validation-record-template.json
+Current Finance status: its 0.Resources\README.md#delivery-status
+Historical evidence: its 0.Resources\Archive\validation-record-template.json
 Technical source references: each scenario's 0.Resources folder.
-Preview escalation: PREVIEW-ISSUE-REPRO.txt
+Historical Preview observation: PREVIEW-ISSUE-REPRO.txt
 
 LIMITS TO SAY OUT LOUD
 Synthetic references, not live enterprise policy or ERP data.
-Bounded text attachments, not PDF/OCR. Some faults were deliberately injected.
+The earlier recordings use bounded text attachments, not PDF/OCR. Some faults were deliberately injected.
 Effective mailbox denial after immediate revocation remains unproven.
-Independent completion of both skills is not established.
-Invoice non-normal package, concurrency and partial-write coverage is incomplete.
-Rebuild JSON is reference material, not an importable solution.
+Independent completion of the earlier pilots' two skills is not established.
+Earlier Invoice text-pilot non-normal, concurrency and partial-write coverage is incomplete;
+its replay also shortened source citation IDs. Preserve that limitation.
+Archived rebuild JSON is optional history, not a solution import or a GHCP requirement.
 
 RELEASE GATE
-Invoice needs reliable actual agent-to-workflow execution, remaining agreed case
-coverage, a finished operator handoff and permission cleanup before sign-off.
-Recorded component success is not a substitute for that gate.
+Invoice finish line: one PDF email through extraction, GHCP review, actual form,
+real authorized manager decision and recorded notification. Rehearse the normal,
+missing-information and rejected cases. The earlier text pilot's successful HTML
+creation/replay does not complete the simplified PDF build.
 Training materials or local packaging do not authorize public sharing or release.
