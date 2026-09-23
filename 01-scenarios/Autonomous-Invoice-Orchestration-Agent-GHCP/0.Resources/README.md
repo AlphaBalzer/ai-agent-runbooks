@@ -1,13 +1,50 @@
 # Resources - Autonomous Invoice Orchestration Agent (GHCP)
 
-Use the [main runbook](../3.Runbook.md) for the delivery sequence. This page holds supplied
-assets, detailed setup and the implementation evidence, so the main scenario pages remain
-focused on the business process.
+## Start here
 
-The [illustrated runbook](../3.Runbook.md) includes exact field tables, nine real screenshots
-and expected results. The [expandable field sheets](#copyable-workflow-fields) below provide
-all action fields directly, without asking the reader to reconstruct them from a large JSON
-definition. They preserve the existing component behavior and limitations.
+Use the [main runbook](../3.Runbook.md) for the **original PDF process with a small GHCP review
+step**. Keep the original intake, save, extraction, HTML form and approval stages.
+
+| Resource | When to use it |
+|---|---|
+| [Original runbook and screenshots](../../Autonomous-Invoice-Orchestration-Agent/3.Runbook.md) | Supporting-flow design and configuration examples. |
+| [Original sample PDF](../../Autonomous-Invoice-Orchestration-Agent/0.Resources/Sample_Invoice.pdf) | First digital-PDF example, after permitted setup. |
+| [Small GHCP addition](../3.Runbook.md#1-create-the-ghcp-agent) | Proposed agent instructions and one review-skill draft. |
+| [Earlier illustrated test-build guide](https://github.com/AlphaBalzer/ai-agent-runbooks/blob/77a9c27c9e85508d80bf3e6f618b08b8953f35a1/01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/3.Runbook.md) | Historical snapshot of the more involved text-only build, not the recommended PDF path. |
+
+You do not need to import or understand the reconstruction JSON to follow the main story.
+Those files describe the earlier controlled text pilot; they are not GHCP requirements or a
+deployable solution package. Its existing workflows, skills, screenshots and raw results are
+preserved. Do not attach the old snapshot-specific instructions to the proposed PDF flow.
+
+## Delivery status
+
+**23 September 2026: simplifying the build, not claiming completion.**
+
+| Area | Actual position |
+|---|---|
+| **Recommended path** | Original PDF intake/extraction/form/approval process with a small GHCP review skill. This simplified variant has not been built or demonstrated end to end. |
+| **Existing test agent** | Published without added channels. Actual workflow Agent-node calls reached its configured source, reference and form tools. This does not prove the original Preview issue is repaired. |
+| **Text invoice to HTML** | One approved synthetic text invoice was received, manually ingested and processed by the published agent into a saved HTML form. The actual file rendered in SharePoint; JSON remained in Dataverse. |
+| **Sequential replay** | Returned the same HTML package without a second file or package row. Not a concurrency or broad reliability result. |
+| **Remaining defect** | Replay response shortened long attachment citation IDs. Stored package identity was correct; exact-citation acceptance is incomplete. |
+| **PDF extraction / approval / automatic intake** | Not demonstrated for the GHCP variant. Existing approval notifications remain off; payment/posting are excluded. |
+
+The repository's JSON definitions and result record describe the earlier September 21
+snapshot, not an export of the later live HTML changes. The dated notes below are retained
+as historical evidence; their old "unpublished" and "JSON only" statements are not current
+deployment claims. No previous failed or unrun case is silently marked passed.
+
+**Next delivery work:** confirm the original PDF extraction/tool contracts, implement the
+small review skill against those outputs, then demonstrate the PDF-to-form-to-real-approval
+sequence. Do not continue extending the text-fixture implementation by default.
+
+<details>
+<summary>Earlier text-pilot implementation and technical references (optional)</summary>
+
+The sections below preserve the existing technical material and links. They are not mandatory
+setup steps for the simplified path. The field sheets exactly describe the supplied older
+definitions, not the proposed PDF workflows or later live HTML amendments.
 
 ## Screenshot provenance
 
@@ -33,7 +70,7 @@ does not rename deployed resources. Screenshots are not instructions to copy the
 broaden tool permissions. The current designer may mark a view dirty merely after opening a
 node; discard that view rather than saving during inspection.
 
-## Delivery status
+## Earlier component evidence - 21 September
 
 **Last recorded runtime evidence: 21 September 2026. Not ready for a dependable end-to-end
 agent demonstration.** Documentation alignment does not change the deployed resources or
@@ -1780,3 +1817,5 @@ coalesce(variables('package_result')?['record_version'],'')
 </details>
 
 <!-- END GENERATED FINANCE FIELD SHEETS -->
+
+</details>

@@ -1,5 +1,16 @@
 # Capability Matrix - Autonomous Invoice Orchestration Agent (GHCP)
 
+This is the **earlier text-pilot matrix**, preserved for reference. It is not the component
+checklist for the simplified PDF path. Start with the [main runbook](../3.Runbook.md), which
+keeps the original supporting flows and proposes one small `invoice-review` skill.
+See [current delivery status](README.md#delivery-status) before relying on the dated details below.
+
+The existing skill payloads and tool contracts remain unchanged. They cannot be relabelled
+as compatible with `ParseInvoiceFlow` without adapting and validating their inputs.
+
+<details>
+<summary>Earlier two-skill test implementation</summary>
+
 ## Status and controls
 
 Normal intake/package components, replay and version gates demonstrated.
@@ -68,3 +79,5 @@ See [architecture](../2.Architecture.md) for the full process and
 rules. [Technical references](README.md#technical-references) link the official
 documentation. No directory-profile connector is needed for the current read/package
 path; any later approver-resolution integration needs its own agreed authority rules.
+
+</details>

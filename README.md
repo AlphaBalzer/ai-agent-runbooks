@@ -60,11 +60,11 @@ Whether you're building your first agent or scaling across multiple business dom
 These separate versions use the same business-scenario structure as the standard-harness
 examples, with focused GHCP enhancements. They include Markdown guides, skills, technical
 references and recorded results, not production-ready solution exports.
-Invoice's workflow components have been demonstrated, but reliable end-to-end agent execution
-remains blocked in Preview.
+Invoice's text-based test agent has produced an HTML review form. Its recommended build is
+being simplified back to the original PDF process; PDF-to-approval completion remains outstanding.
 
 - [Email & Shared Mailbox Triage Agent (GHCP)](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/1.Overview.md): evidence-based investigation before routing and response decisions. See [delivery status](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#delivery-status) for supplied assessment components and remaining integrations.
-- [Autonomous Invoice Orchestration Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): the original invoice intake, extraction, payment form and human-approval process with source-backed investigation. See [delivery status](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md#delivery-status) for demonstrated components and the outstanding agent/approval integration; posting and payment are excluded.
+- [Autonomous Invoice Orchestration Agent (GHCP)](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/1.Overview.md): the original PDF invoice process with a small GHCP review step. [Delivery status](./01-scenarios/Autonomous-Invoice-Orchestration-Agent-GHCP/0.Resources/README.md#delivery-status) separates the proposed simplified build from the earlier text pilot; posting and payment are excluded.
 - [Shared Inbox trainer walkthrough](./01-scenarios/Email-and-Mailbox-Triage-Agent-GHCP/0.Resources/README.md#trainer-walkthrough), [two-scenario trainer quickstart](./TRAINING-QUICKSTART.txt) and [Invoice Preview issue](./PREVIEW-ISSUE-REPRO.txt).
 
 **Need implementation patterns?** Check out [02-patterns/](./02-patterns/) for proven technical approaches including Copilot Studio orchestration, RAG patterns, and multi-agent design.
