@@ -16,7 +16,7 @@
 | Published Invoice Orchestration Agent | ✅ Present |
 | GPT-5 Chat model | ✅ Present |
 | Read-only SharePoint tool | ✅ Present |
-| `invoice-review` skill | ✅ Present, but the repository version is corrected to match direct SharePoint PDF review |
+| `invoice-review` skill | ✅ Present and aligned to direct SharePoint PDF review |
 | Knowledge sources | ➖ None configured or required |
 | Published intake and approval workflow | ✅ Present |
 | PDF saved to SharePoint | ✅ Verified |
