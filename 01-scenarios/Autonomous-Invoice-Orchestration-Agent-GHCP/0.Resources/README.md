@@ -28,12 +28,9 @@
 | Approved outcome notification | ✅ Verified |
 | Rejected outcome notification | 🧪 Configured; rejection test evidence not yet captured |
 
-## Important Implementation Note
+## Deployment Note
 
-The live agent was temporarily given an older `invoice-review` skill that referred to
-`ParseInvoiceFlow`. That description does not match the final architecture. The skill in this
-scenario is the corrected version: the agent reads the exact source PDF directly through its
-SharePoint tool, while the workflow owns all writes and approval actions.
-
-Review the corrected skill before replacing the skill on the published agent, then rerun both
-the complete and incomplete invoice tests.
+Use the agent instructions, skill and test documents in this folder as one coherent build.
+The skill reads the exact source PDF directly through the agent's SharePoint tool, while the
+workflow owns all writes and approval actions. Do not mix these files with earlier draft
+architectures or flow definitions.
